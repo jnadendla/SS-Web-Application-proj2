@@ -11,14 +11,14 @@ import javax.servlet.http.HttpServletRequest;
 
 public class AnalyticsHelper {
 
-    public static List<ResultSet> listSales(HttpServletRequest request) {
-        List<ResultSet> sales = new ArrayList<ResultSet>();
+    public static List<Sales> listSales(HttpServletRequest request) {
+        List<Sales> sales = new ArrayList<Sales>();
+        ResultSet rs;
         Connection conn = null;
         Statement stmt = null;
-        ResultSet rs = null;
         String select = "";
         String searchFrom ="";
-        String categoryFilter = "", searchFilter = "", additionalFilter = "";
+        String categoryFilter = "", additionalFilter = "";
         String orderBy = "";
         
         //Get search item
@@ -58,13 +58,13 @@ public class AnalyticsHelper {
            if (order != null && !order.isEmpty())
                if(order.equals("alphabetical")) {
                   if(display.equals("customers")) {
-                     orderBy = "u.name";
+                     orderBy = "u.name, p.name";
                   }
                   else if(display.equals("states"))
-                     orderBy = "t.name";
+                     orderBy = "t.name, p.name";
                }
                else if(order.equals("topk")) {
-                  orderBy = "(s.price * s.quantity) DESC";
+                  orderBy = "(s.price * s.quantity) DESC, p.name";
                }
        } catch (Exception e) {
        }
@@ -74,16 +74,24 @@ public class AnalyticsHelper {
                 conn = HelperUtils.connect();
             } catch (Exception e) {
                 System.err.println("Internal Server Error. This shouldn't happen.");
-                return new ArrayList<ResultSet>();
+                return sales;
             }
             stmt = conn.createStatement();
             String query = "SELECT " + select + " FROM " + searchFrom + filter + " ORDER BY " + orderBy;
             System.out.print(query);
             rs = stmt.executeQuery(query);
+            
+            //populate list
+            while (rs.next()) {
+               String user = rs.getString("name");
+               double price = rs.getDouble("total");
+               String product = rs.getString("product");
+               sales.add(new Sales(user, price, product));
+            }
             return sales;
         } catch (Exception e) {
             System.err.println("Some error happened!<br/>" + e.getLocalizedMessage());
-            return new ArrayList<ResultSet>();
+            return sales;
         } finally {
             try {
                 stmt.close();
