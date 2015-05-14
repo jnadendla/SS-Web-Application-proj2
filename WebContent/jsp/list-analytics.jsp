@@ -5,19 +5,21 @@
     import="helpers.*"%>
 <%
     List<Sales> sales = AnalyticsHelper.listSales(request);
-if(!sales.isEmpty()) {
-   out.print("entered");
+    List<String> products = AnalyticsHelper.listProductsAlphabetically();
+if(!sales.isEmpty() || !products.isEmpty()) {
 %>
-<table align="center">
+<table class="table table-striped" align="center">
     <thead>
         <tr align="center">
-            <th width="20%"><B>Product Name</B></th>
-            <th width="20%"><B>SKU</B></th>
-            <th width="20%"><B>Category Name</B></th>
-            <th width="20%"><B>Price</B></th>
-            <th
-                width="20%"
-                colspan="2"><B>Operations</B></th>
+            <th></th>
+            <%
+            for(int k=0; k < products.size(); ++k) {
+               String product = products.get(k);
+            %>
+                <th width="50%"><B><%=product %></B></th>
+            <%
+            }
+            %>
         </tr>
         <tr></tr>
         <%
