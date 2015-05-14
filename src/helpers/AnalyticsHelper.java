@@ -11,11 +11,12 @@ import javax.servlet.http.HttpServletRequest;
 
 public class AnalyticsHelper {
 
-    public static List<ResultSet> listProducts(HttpServletRequest request) {
+    public static List<ResultSet> listSales(HttpServletRequest request) {
         List<ResultSet> sales = new ArrayList<ResultSet>();
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
+        String select = "";
         String searchFrom ="";
         String categoryFilter = "", searchFilter = "", additionalFilter = "";
         String orderBy = "";
@@ -24,15 +25,18 @@ public class AnalyticsHelper {
         String display = "";
         try {
             display = request.getParameter("displayFilter");
-            if (display != null && !display.isEmpty()) {
-                if(display == "customers") {
-                   searchFrom = "users AS u, sales AS s, products AS p, categories AS c"; 
-                   additionalFilter = "u.id = s.uid AND u.role = \"customer\" AND p.id = S.pid ";
-                }
-                else if(display == "states") {
-                   searchFrom = "users AS u, states t, sales AS s, products AS p, categories AS c ";
-                   additionalFilter = "t.id = u.state AND u.id = s.uid AND u.role = \"customer\" AND p.id = s.pid ";
-                }
+            if (display.equals("")) {
+               return sales;
+            }
+            if(display.equals("customers")) {
+               select = "u.name AS name, (s.price * s.quantity) AS total, p.name AS product";
+               searchFrom = "users AS u, sales AS s, products AS p, categories AS c"; 
+               additionalFilter = "u.id = s.uid AND u.role = 'customer' AND p.id = S.pid ";
+            }
+            else if(display.equals("states")) {
+               select = "t.name AS name, (s.price * s.quantity) AS total, p.name AS product";
+               searchFrom = "users AS u, states t, sales AS s, products AS p, categories AS c ";
+               additionalFilter = "t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
             }
         } catch (Exception e) {
         }
@@ -40,31 +44,26 @@ public class AnalyticsHelper {
         //Get category filter
         try {
             String category = request.getParameter("categoryFilter");
-            if (category != null && !category.isEmpty())
+            if (category != null && !category.isEmpty() && !category.equals("all"))
                 categoryFilter = "AND c.id = p.cid AND c.name = " + category;
         } catch (Exception e) {
         }
         
         //Get total filter
-        String filter = null;
-        if (categoryFilter.isEmpty()) {
-           
-        } else {
-           filter = " WHERE " + additionalFilter + categoryFilter;
-        }
+        String filter = " WHERE " + additionalFilter + categoryFilter;
         
         //Get ordering
         try {
            String order = request.getParameter("sortFilter");
            if (order != null && !order.isEmpty())
-               if(order == "alphabetical") {
-                  if(display == "customers") {
+               if(order.equals("alphabetical")) {
+                  if(display.equals("customers")) {
                      orderBy = "u.name";
                   }
-                  else if(display == "states")
+                  else if(display.equals("states"))
                      orderBy = "t.name";
                }
-               else if(order == "topk") {
+               else if(order.equals("topk")) {
                   orderBy = "(s.price * s.quantity) DESC";
                }
        } catch (Exception e) {
@@ -78,9 +77,8 @@ public class AnalyticsHelper {
                 return new ArrayList<ResultSet>();
             }
             stmt = conn.createStatement();
-            String query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product"
-                    + " FROM " + searchFrom + filter + " ORDER BY " + orderBy;
-            
+            String query = "SELECT " + select + " FROM " + searchFrom + filter + " ORDER BY " + orderBy;
+            System.out.print(query);
             rs = stmt.executeQuery(query);
             return sales;
         } catch (Exception e) {
