@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 public class AnalyticsHelper {
-	private static HttpSession session;
 
     public static List<Sales> listSales(HttpServletRequest request) {
         List<Sales> sales = new ArrayList<Sales>();
@@ -20,7 +19,7 @@ public class AnalyticsHelper {
         Statement stmt = null;
         String select = "";
         String searchFrom ="", categoryFrom = "";
-        String categoryFilter = "", additionalFilter = "";
+        String categoryFilter = "", additionalFilter = "", category = "";
         String orderBy = "";
         
         //Here we look at where we filter by user or customer and create a string that determines
@@ -52,10 +51,10 @@ public class AnalyticsHelper {
         //the category, we leave the filter and from strings as empty and then they
         //will not affect the query.
         try {
-            String category = request.getParameter("categoryFilter");
+            category = request.getParameter("categoryFilter");
             if (category != null && !category.isEmpty() && !category.equals("all")) {
-               categoryFrom = " , categories AS c";
-               categoryFilter = "AND c.id = p.cid AND c.name = '" + category + "' ";
+               categoryFrom = ", categories AS c";
+               categoryFilter = "AND p.cid = c.id AND c.id = " + category + " ";
             }
         } catch (Exception e) {
         }
@@ -80,7 +79,7 @@ public class AnalyticsHelper {
                }
                else if(order.equals("topk")) {
                   //User helper method to build list and then return immediately
-            	  sales = listByTopK(display, categoryFrom, filter);
+            	  sales = listByTopK(display, categoryFrom, category, filter);
             	  return sales;
                }
        } catch (Exception e) {
@@ -117,11 +116,13 @@ public class AnalyticsHelper {
                //because users can purchase items multiple times but at different instances, so
                //the database will contain multiple sales of the same product.
                if(everyOther) {
-                  if(temp.getUser().equals(user) && temp.getProduct().equals(product)) {
-                     String tempUser = temp.getUser();
+                  if(temp.getPurchaser().equals(user) && temp.getProduct().equals(product)) {
+                     String tempUser = temp.getPurchaser();
                      double tempPrice = temp.getPrice() + price;
                      String tempProduct = temp.getProduct();
                      temp = new Sales(tempUser, tempPrice, tempProduct);
+                     if(rs.isLast())//make sure to add item it is the last one
+                        sales.add(temp);
                   }
                   else {   
                      sales.add(temp);
@@ -133,6 +134,8 @@ public class AnalyticsHelper {
                else {
                   everyOther = true;
                   temp = new Sales(user, price, product);
+                  if(rs.isLast())//make sure to add last item
+                     sales.add(temp);
                }
             }
             return sales;
@@ -158,7 +161,7 @@ public class AnalyticsHelper {
        String category = request.getParameter("categoryFilter");
        
        if(category != null && !category.isEmpty() && !category.equals("all")) {
-    	   categoryFilter = ", categories AS c WHERE c.id. = p.cid AND c.name = '" + category + "'";
+    	   categoryFilter = ", categories AS c WHERE p.cid = c.id AND c.id = " + category + "";
        }
        
        try {
@@ -169,7 +172,8 @@ public class AnalyticsHelper {
               return products;
           }
           stmt = conn.createStatement();
-          String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY name";
+          String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY p.name";
+          System.out.println("Product Query: " + query);
           rs = stmt.executeQuery(query);
           
           //populate list
@@ -198,7 +202,7 @@ public class AnalyticsHelper {
      * the orer in which the users/states will appear in a topk approach, and another to
      * get all the sales based on that ordering.
      */
-    private static List<Sales> listByTopK(String display, String categoryFrom, String filter) {
+    private static List<Sales> listByTopK(String display, String categoryFrom, String category, String filter) {
     	List<Sales> sales = new ArrayList<Sales>();
     	List<String> topk = new ArrayList<String>();
     	ResultSet rs, order;
@@ -214,11 +218,26 @@ public class AnalyticsHelper {
             }
             stmt = conn.createStatement();
             String query = "";
-            if(display.equals("customers"))
-            	query = "SELECT u.name AS name FROM sales AS s, users AS u WHERE u.id = s.uid GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC";
-            else if(display.equals("states"))
-            	query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t WHERE t.id = u.state AND u.id = s.uid GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC";
             
+            String categoryFilter = "";
+            String productsFrom = "";
+            if(!category.equals("all")) {
+               categoryFilter = "AND s.pid = p.id AND p.cid = c.id AND c.id = '" + category + "' ";
+               productsFrom = ", products AS p";
+               categoryFrom = categoryFrom;
+            }
+
+            //Get the topk ordering or users/states
+            if(display.equals("customers"))
+            	query = "SELECT u.name AS name FROM sales AS s, users AS u" + productsFrom
+            	         + categoryFrom + " WHERE u.id = s.uid " + categoryFilter 
+            	         + "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC";
+            else if(display.equals("states"))
+            	query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t" + productsFrom
+            	         + categoryFrom + " WHERE t.id = u.state AND u.id = s.uid " + categoryFilter 
+            	         + "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC";
+            
+            System.out.println(query);
             order = stmt.executeQuery(query);
             
             //populate list
@@ -267,33 +286,36 @@ public class AnalyticsHelper {
 	            boolean everyOther = false;
 	            Sales temp = null;
 	            while (rs.next()) {
-	               String user = rs.getString("name");
+	               String purchaser = rs.getString("name");
 	               double price = rs.getDouble("total");
 	               String product = rs.getString("product");
-	               
+
 	               //The everyOther aspect is designed so have the sales from the previous loop index
 	               //and we can check if the current sale is mad by the same user and of the same
 	               //product.  If so, we just mold these sales into 1 sale.  This is neccessary
 	               //because users can purchase items multiple times but at different instances, so
 	               //the database will contain multiple sales of the same product.
 	               if(everyOther) {
-	                  if(temp.getUser().equals(user) && temp.getProduct().equals(product)) {
-	                     String tempUser = temp.getUser();
+	                  if(temp.getPurchaser().equals(purchaser) && temp.getProduct().equals(product)) {
+	                     String tempPurchaser = temp.getPurchaser();
 	                     double tempPrice = temp.getPrice() + price;
 	                     String tempProduct = temp.getProduct();
-	                     temp = new Sales(tempUser, tempPrice, tempProduct);
+	                     temp = new Sales(tempPurchaser, tempPrice, tempProduct);
+	                     if(rs.isLast())//make sure to add item it is the last one
+	                        sales.add(temp);
 	                  }
 	                  else {   
-	                	 System.out.println(temp.getUser());
 	                     sales.add(temp);
-	                     temp = new Sales(user, price, product);
-	                     if(rs.isLast())
-	                    	 sales.add(temp);
+	                     temp = new Sales(purchaser, price, product);
+	                     if(rs.isLast())//make sure to add item it is the last one
+	                        sales.add(temp);
 	                  }
 	               }
 	               else {
 	                  everyOther = true;
-	                  temp = new Sales(user, price, product);
+	                  temp = new Sales(purchaser, price, product);
+                      if(rs.isLast())//make sure to add last item
+                         sales.add(temp);
 	               }
 	            }
             }

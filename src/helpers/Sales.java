@@ -2,19 +2,19 @@ package helpers;
 
 public class Sales {
    
-   private String user;
+   private String purchaser;//can be a user or state
    
    private double price;
    
    private String product;
    
    /**
-    * @param user
+    * @param purchaser
     * @param price
     * @param product
     */
-   public Sales(String user, double price, String product) {
-       this.user = user;
+   public Sales(String purchaser, double price, String product) {
+       this.purchaser = purchaser;
        this.price = price;
        this.product = product;
    }
@@ -22,8 +22,8 @@ public class Sales {
    /**
     * @return the user
     */
-   public String getUser() {
-       return user;
+   public String getPurchaser() {
+       return purchaser;
    }
 
    /**

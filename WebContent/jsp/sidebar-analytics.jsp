@@ -15,7 +15,7 @@
 							<%
 									for (CategoryWithCount cwc : categories) {
 								%>
-							<option value=<%=cwc.getName() %>><%=cwc.getName()%></option>
+							<option value=<%=cwc.getId() %>><%=cwc.getName()%></option>
 
 							<%
 									}

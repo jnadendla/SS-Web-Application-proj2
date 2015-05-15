@@ -15,6 +15,9 @@ if(!sales.isEmpty() && !products.isEmpty()) {
         <tr align="center">
             <th></th>
             <%
+            //Loop through all the products, and fill up one row at a time
+            //This means some columns may have an empty sale, in this case we
+            //simply print out 0
             for(int k=0; k < products.size(); ++k) {
                String product = products.get(k);
             %>
@@ -35,18 +38,18 @@ if(!sales.isEmpty() && !products.isEmpty()) {
               getnext = false;
            }
 
-           String user = s.getUser();
+           String purchaser = s.getPurchaser();//can be a user or state
            double total = s.getPrice();
            String product = s.getProduct();
-           if(!currUser.equals(user) && i == 0) {
-              currUser = user;
+           if(!currUser.equals(purchaser) && i == 0) {
+              currUser = purchaser;
               newrow = true;
               --i;
            }   
            if(newrow) {
            %>
               <tr></tr>
-              <td><%=user %></td>
+              <td><B><%=purchaser %></B></td>
            <%
            } else if(products.get(i).equals(product)) {
         	   getnext = true;
@@ -59,7 +62,10 @@ if(!sales.isEmpty() && !products.isEmpty()) {
         <%
            }
            newrow = false;
-           if(i == products.size() - 1 && salesIter.hasNext()) {
+           //Loop back around if there are more sales to print and you
+           //are end of the row of products. You must have more sales available,
+           //or the current sale you are on must not have been placed in the table yet
+           if(i == products.size() - 1 && (salesIter.hasNext() || getnext == false)) {
         	   i = -1;
            }
         }
