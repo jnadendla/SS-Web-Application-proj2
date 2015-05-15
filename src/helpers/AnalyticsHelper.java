@@ -14,6 +14,7 @@ public class AnalyticsHelper {
 
     public static List<Sales> listSales(HttpServletRequest request) {
         List<Sales> sales = new ArrayList<Sales>();
+        List<String> names = new ArrayList<String>();
         ResultSet rs;
         Connection conn = null;
         Statement stmt = null;
@@ -87,55 +88,86 @@ public class AnalyticsHelper {
         
         try {
             try {
-            	//aquire connection
+            	//acquire connection
                 conn = HelperUtils.connect();
             } catch (Exception e) {
                 System.err.println("Internal Server Error. This shouldn't happen.");
                 return sales;
             }
             stmt = conn.createStatement();
+
+            //Get the aplphabetical ordering or users/states, if you want to LIMIT and
+            //OFFSET the number of users, here is where you do that
+            String query = "";
+            String name = "";
+            if(display.equals("customers")) {
+                query = "SELECT u.name AS name FROM sales AS s, users AS u, products AS p"
+                         + categoryFrom + " WHERE " + "p.id = s.pid AND u.id = s.uid " 
+                         + categoryFilter + "GROUP BY u.name ORDER BY u.name";
+                name = "u.name";
+            }
+            else if(display.equals("states")) {
+                query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p"
+                         + categoryFrom + " WHERE " + "p.id = s.pid AND t.id = u.state AND u.id = s.uid "
+                         + categoryFilter + "GROUP BY t.name ORDER BY t.name";
+                name = "t.name";
+            }
             
-            //create the entire query string based of the strings we have created individually
-            String query = "SELECT " + select + " FROM " + searchFrom + categoryFrom + filter + orderBy;
             System.out.println(query);
-            rs = stmt.executeQuery(query);
-            
-            //populate list (we cannot return a ResultSet because it's bad programming).
-            //Simply fill our list with sales by looping through the result set and getting
-            //the information to build sales.
-            boolean everyOther = false;
-            Sales temp = null;
+            rs = stmt.executeQuery(query);     
+            //populate list
             while (rs.next()) {
-               String user = rs.getString("name");
-               double price = rs.getDouble("total");
-               String product = rs.getString("product");
+               String purchaser = rs.getString("name");
+               names.add(purchaser);
+            }
+            
+            //For each user/state we get the products they have bought
+            for(int i=0; i < names.size(); ++i) {
+            
+               //create the entire query string based of the strings we have created individually
+               //If you want to LIMIT and OFFSET the number of products, here is where you do that
+               query = "SELECT " + select + " FROM " + searchFrom + categoryFrom + filter + 
+                       "AND " + name + " = '" + names.get(i) + "' " + orderBy;
+               System.out.println(query);
+               rs = stmt.executeQuery(query);
                
-               //The everyOther aspect is designed so have the sales from the previous loop index
-               //and we can check if the current sale is mad by the same user and of the same
-               //product.  If so, we just mold these sales into 1 sale.  This is neccessary
-               //because users can purchase items multiple times but at different instances, so
-               //the database will contain multiple sales of the same product.
-               if(everyOther) {
-                  if(temp.getPurchaser().equals(user) && temp.getProduct().equals(product)) {
-                     String tempUser = temp.getPurchaser();
-                     double tempPrice = temp.getPrice() + price;
-                     String tempProduct = temp.getProduct();
-                     temp = new Sales(tempUser, tempPrice, tempProduct);
-                     if(rs.isLast())//make sure to add item it is the last one
+               //populate list (we cannot return a ResultSet because it's bad programming).
+               //Simply fill our list with sales by looping through the result set and getting
+               //the information to build sales.
+               boolean everyOther = false;
+               Sales temp = null;
+               while (rs.next()) {
+                  String user = rs.getString("name");
+                  double price = rs.getDouble("total");
+                  String product = rs.getString("product");
+                  
+                  //The everyOther aspect is designed so have the sales from the previous loop index
+                  //and we can check if the current sale is mad by the same user and of the same
+                  //product.  If so, we just mold these sales into 1 sale.  This is neccessary
+                  //because users can purchase items multiple times but at different instances, so
+                  //the database will contain multiple sales of the same product.
+                  if(everyOther) {
+                     if(temp.getPurchaser().equals(user) && temp.getProduct().equals(product)) {
+                        String tempUser = temp.getPurchaser();
+                        double tempPrice = temp.getPrice() + price;
+                        String tempProduct = temp.getProduct();
+                        temp = new Sales(tempUser, tempPrice, tempProduct);
+                        if(rs.isLast())//make sure to add item it is the last one
+                           sales.add(temp);
+                     }
+                     else {   
+                        sales.add(temp);
+                        temp = new Sales(user, price, product);
+                        if(rs.isLast())
+                       	 sales.add(temp);
+                     }
+                  }
+                  else {
+                     everyOther = true;
+                     temp = new Sales(user, price, product);
+                     if(rs.isLast())//make sure to add last item
                         sales.add(temp);
                   }
-                  else {   
-                     sales.add(temp);
-                     temp = new Sales(user, price, product);
-                     if(rs.isLast())
-                    	 sales.add(temp);
-                  }
-               }
-               else {
-                  everyOther = true;
-                  temp = new Sales(user, price, product);
-                  if(rs.isLast())//make sure to add last item
-                     sales.add(temp);
                }
             }
             return sales;
@@ -171,6 +203,7 @@ public class AnalyticsHelper {
               System.err.println("Internal Server Error. This shouldn't happen.");
               return products;
           }
+          
           stmt = conn.createStatement();
           String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY p.name";
           System.out.println("Product Query: " + query);
@@ -224,7 +257,6 @@ public class AnalyticsHelper {
             if(!category.equals("all")) {
                categoryFilter = "AND s.pid = p.id AND p.cid = c.id AND c.id = '" + category + "' ";
                productsFrom = ", products AS p";
-               categoryFrom = categoryFrom;
             }
 
             //Get the topk ordering or users/states
@@ -270,14 +302,16 @@ public class AnalyticsHelper {
             		nameFilter = " AND t.name = '" + name + "'";
             	
 	        	String query = "";
-	        	if(display.equals("customers"))
+	        	if(display.equals("customers")) {
 	        		query = "SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product "
 	        				+ "FROM sales AS s, users AS u, products AS p" + categoryFrom 
 	        				+ filter + nameFilter + " ORDER BY p.name";
-	        	else if(display.equals("states"))
+	        	}
+	        	else if(display.equals("states")) {
 	        		query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product "
 	        				+ "FROM sales AS s, users AS u, states AS t, products AS p" + categoryFrom
 	        				+  filter + nameFilter + " ORDER BY p.name";
+	        	}
 	        	
 	        	System.out.println(query);
 	            rs = stmt.executeQuery(query);
