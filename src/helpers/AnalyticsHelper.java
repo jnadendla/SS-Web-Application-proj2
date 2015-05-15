@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 public class AnalyticsHelper {
+	private static HttpSession session;
 
     public static List<Sales> listSales(HttpServletRequest request) {
         List<Sales> sales = new ArrayList<Sales>();
@@ -124,6 +126,8 @@ public class AnalyticsHelper {
                   else {   
                      sales.add(temp);
                      temp = new Sales(user, price, product);
+                     if(rs.isLast())
+                    	 sales.add(temp);
                   }
                }
                else {
@@ -145,11 +149,17 @@ public class AnalyticsHelper {
         }
     }
     
-    public static List<String> listProductsAlphabetically() {
+    public static List<String> listProductsAlphabetically(HttpServletRequest request) {
        List<String> products = new ArrayList<String>();
        ResultSet rs;
        Connection conn = null;
        Statement stmt = null;
+       String categoryFilter = "";
+       String category = request.getParameter("categoryFilter");
+       
+       if(category != null && !category.isEmpty() && !category.equals("all")) {
+    	   categoryFilter = ", categories AS c WHERE c.id. = p.cid AND c.name = '" + category + "'";
+       }
        
        try {
           try {
@@ -159,7 +169,7 @@ public class AnalyticsHelper {
               return products;
           }
           stmt = conn.createStatement();
-          String query = "SELECT name FROM products ORDER BY name";
+          String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY name";
           rs = stmt.executeQuery(query);
           
           //populate list
@@ -233,6 +243,7 @@ public class AnalyticsHelper {
             //Loop through all the names ordered by topk and query sales information in topk order
             for(int i=0; i<topk.size(); ++i) {
             	String name = topk.get(i);
+         
             	String nameFilter = "";
             	if(display.equals("customers"))
             		nameFilter = " AND u.name = '" + name + "'";
@@ -273,8 +284,11 @@ public class AnalyticsHelper {
 	                     temp = new Sales(tempUser, tempPrice, tempProduct);
 	                  }
 	                  else {   
+	                	 System.out.println(temp.getUser());
 	                     sales.add(temp);
 	                     temp = new Sales(user, price, product);
+	                     if(rs.isLast())
+	                    	 sales.add(temp);
 	                  }
 	               }
 	               else {
