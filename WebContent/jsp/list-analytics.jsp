@@ -41,6 +41,7 @@ if(!sales.isEmpty() && !products.isEmpty()) {
            if(!currUser.equals(user) && i == 0) {
               currUser = user;
               newrow = true;
+              --i;
            }   
            if(newrow) {
            %>
