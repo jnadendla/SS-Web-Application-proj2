@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 public class AnalyticsHelper {
+    private static int rowOffset = 0;
+    private static int colOffset = 0;
 
     public static List<Sales> listSales(HttpServletRequest request) {
         List<Sales> sales = new ArrayList<Sales>();
@@ -22,7 +24,9 @@ public class AnalyticsHelper {
         String searchFrom ="", categoryFrom = "";
         String categoryFilter = "", additionalFilter = "", category = "";
         String orderBy = "";
-        String limitRows="LIMIT 20 OFFSET 0";
+        String limitRows = "LIMIT 20 OFFSET " + rowOffset;
+        String limitCols = " LIMIT 10 OFFSET " + colOffset;
+        
         
         //Here we look at where we filter by user or customer and create a string that determines
         //what items we will want to select in the SELECT clause of the query. There is another
@@ -130,7 +134,7 @@ public class AnalyticsHelper {
                //create the entire query string based of the strings we have created individually
                //If you want to LIMIT and OFFSET the number of products, here is where you do that
                query = "SELECT " + select + " FROM " + searchFrom + categoryFrom + filter + 
-                       "AND " + name + " = '" + names.get(i) + "' " + orderBy;
+                       "AND " + name + " = '" + names.get(i) + "' " + orderBy + limitCols;
                System.out.println(query);
                rs = stmt.executeQuery(query);
                
@@ -194,7 +198,7 @@ public class AnalyticsHelper {
        Statement stmt = null;
        String categoryFilter = "";
        String category = request.getParameter("categoryFilter");
-       String limitCols = "LIMIT 10 OFFSET 0";
+       String limitCols = "LIMIT 10 OFFSET " + colOffset;
        
        if(category != null && !category.isEmpty() && !category.equals("all")) {
     	   categoryFilter = ", categories AS c WHERE p.cid = c.id AND c.id = " + category + "";
@@ -245,6 +249,8 @@ public class AnalyticsHelper {
     	ResultSet rs, order;
         Connection conn = null;
         Statement stmt = null;
+        String limitRows = " LIMIT 20 OFFSET " + rowOffset;
+        String limitCols = " LIMIT 10 OFFSET " + colOffset;
     	
     	try {
             try {
@@ -267,11 +273,11 @@ public class AnalyticsHelper {
             if(display.equals("customers"))
             	query = "SELECT u.name AS name FROM sales AS s, users AS u" + productsFrom
             	         + categoryFrom + " WHERE u.id = s.uid " + categoryFilter 
-            	         + "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC";
+            	         + "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC" + limitRows;
             else if(display.equals("states"))
             	query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t" + productsFrom
             	         + categoryFrom + " WHERE t.id = u.state AND u.id = s.uid " + categoryFilter 
-            	         + "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC";
+            	         + "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC" + limitRows;
             
             System.out.println(query);
             order = stmt.executeQuery(query);
@@ -309,12 +315,12 @@ public class AnalyticsHelper {
 	        	if(display.equals("customers")) {
 	        		query = "SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product "
 	        				+ "FROM sales AS s, users AS u, products AS p" + categoryFrom 
-	        				+ filter + nameFilter + " ORDER BY p.name";
+	        				+ filter + nameFilter + " ORDER BY p.name" + limitCols;
 	        	}
 	        	else if(display.equals("states")) {
 	        		query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product "
 	        				+ "FROM sales AS s, users AS u, states AS t, products AS p" + categoryFrom
-	        				+  filter + nameFilter + " ORDER BY p.name";
+	        				+  filter + nameFilter + " ORDER BY p.name" + limitCols;
 	        	}
 	        	
 	        	System.out.println(query);
