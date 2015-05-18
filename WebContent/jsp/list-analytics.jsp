@@ -3,9 +3,18 @@
 <%@page import="java.util.List" import="java.util.Iterator"
 	import="helpers.*"%>
 <%
-	List<Sales> sales = AnalyticsHelper.listSales(request);
-	List<String> products = AnalyticsHelper
-			.listProductsAlphabetically(request);
+boolean nextRows = false;
+boolean nextCols = false;
+String colClick = request.getParameter("cols");
+String rowClick = request.getParameter("rows");
+if(colClick != null && colClick.equals("Next 10")) {
+   nextCols = true;
+} else if(rowClick != null && rowClick.equals("Next 20")) {
+   nextRows = true;
+}
+
+	List<Sales> sales = AnalyticsHelper.listSales(request, nextCols, nextRows);
+	List<String> products = AnalyticsHelper.listProductsAlphabetically();
 	if (!sales.isEmpty() && !products.isEmpty()) {
 		Iterator<Sales> salesIter = sales.iterator();
 %>
@@ -26,7 +35,7 @@
 			%>
 			<th>
 				<form action="">
-					<input type="submit" value="Next 10">
+					<input type="submit" value="Next 10" name="cols">
 				</form>
 			</th>
 		</tr>
@@ -83,7 +92,7 @@
 		<tr>
 			<td>
 				<form action="">
-					<input type="submit" value="Next 20">
+					<input type="submit" value="Next 20" name="rows">
 				</form>
 			</td>
 		</tr>

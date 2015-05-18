@@ -11,10 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 public class AnalyticsHelper {
+    private static HttpSession session;
     private static int rowOffset = 0;
     private static int colOffset = 0;
 
-    public static List<Sales> listSales(HttpServletRequest request) {
+    public static List<Sales> listSales(HttpServletRequest request, boolean nextCols, boolean nextRows) {
         List<Sales> sales = new ArrayList<Sales>();
         List<String> names = new ArrayList<String>();
         ResultSet rs;
@@ -24,44 +25,68 @@ public class AnalyticsHelper {
         String searchFrom ="", categoryFrom = "";
         String categoryFilter = "", additionalFilter = "", category = "";
         String orderBy = "";
+        
+        //When next button is clicked, increment the offsets
+        if(nextCols)
+           colOffset += 10;
+        else if(nextRows)
+           rowOffset += 20;
+        else {
+           //New data means we start at offset 0
+           rowOffset = 0;
+           colOffset = 0;
+        }
+
         String limitRows = "LIMIT 20 OFFSET " + rowOffset;
         String limitCols = " LIMIT 10 OFFSET " + colOffset;
         
+        //If the RUN QUERY button has been pressed this should capture the new
+        //filter option it has selected, but if nothing new has been selected,
+        //we use the previous filter data.
+        session = request.getSession();
+        String d = request.getParameter("displayFilter");
+        String c = request.getParameter("categoryFilter");
+        String o = request.getParameter("sortFilter");
+        if(d != null && !d.equals("") 
+           && o != null && !o.equals("")) {
+           session.setAttribute("displayFilter", d);
+           session.setAttribute("categoryFilter", c);
+           session.setAttribute("sortFilter", o);
+        }       
+                
+        //This area determines what to filter the category by. If ALL is selected by
+        //the category, we leave the filter and from strings as empty and then they
+        //will not affect the query.
+        try {
+            category = (String) session.getAttribute("categoryFilter");
+            if (category != null && !category.isEmpty() && !category.equals("all")) {
+               categoryFrom = ", categories AS c";
+               categoryFilter = "AND p.cid = c.id AND c.id = " + category + " ";
+            }
+        } catch (Exception e) {
+        }
         
         //Here we look at where we filter by user or customer and create a string that determines
         //what items we will want to select in the SELECT clause of the query. There is another
         //string that will reflect which tables we need to query from.  
         //If we filter by states there is an additional table to query from (states).  
-        //We also create a filter string that contains the string that will
         //be placed in the WHERE clause of the query.
         String display = "";
         try {
-            display = request.getParameter("displayFilter");
-            if (display.equals("")) {
+            display = (String) session.getAttribute("displayFilter");
+            if (display == null || display.equals("")) {
                return sales;
             }
             if(display.equals("customers")) {
                select = "u.name AS name, (s.price * s.quantity) AS total, p.name AS product";
-               searchFrom = "users AS u, sales AS s, products AS p"; 
+               searchFrom = "users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p"; 
                additionalFilter = "u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
     
             }
             else if(display.equals("states")) {
                select = "t.name AS name, (s.price * s.quantity) AS total, p.name AS product";
-               searchFrom = "users AS u, states t, sales AS s, products AS p";
+               searchFrom = "users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p";
                additionalFilter = "t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
-            }
-        } catch (Exception e) {
-        }
-        
-        //This area determines what to filter the category by. If ALL is selected by
-        //the category, we leave the filter and from strings as empty and then they
-        //will not affect the query.
-        try {
-            category = request.getParameter("categoryFilter");
-            if (category != null && !category.isEmpty() && !category.equals("all")) {
-               categoryFrom = ", categories AS c";
-               categoryFilter = "AND p.cid = c.id AND c.id = " + category + " ";
             }
         } catch (Exception e) {
         }
@@ -75,7 +100,7 @@ public class AnalyticsHelper {
         //the name and product of the users/states.  If the sort is topk, then
         //we call a helper method to build the rest of the sales list.
         try {
-           String order = request.getParameter("sortFilter");
+           String order = (String) session.getAttribute("sortFilter");
            if (order != null && !order.isEmpty())
                if(order.equals("alphabetical")) {
                   if(display.equals("customers")) {
@@ -86,11 +111,12 @@ public class AnalyticsHelper {
                }
                else if(order.equals("topk")) {
                   //User helper method to build list and then return immediately
-            	  sales = listByTopK(display, categoryFrom, category, filter);
+            	  sales = listByTopK(display, categoryFrom, category, filter);//////TOPK ORDER HAPPENS IN A SEPARATE FUNCIONT CALLED HERE
             	  return sales;
                }
        } catch (Exception e) {
        }
+        
         
         try {
             try {
@@ -104,6 +130,7 @@ public class AnalyticsHelper {
 
             //Get the aplphabetical ordering or users/states, if you want to LIMIT and
             //OFFSET the number of users, here is where you do that
+            /////////////QUERY NAME ORDERING////////////////////////////
             String query = "";
             String name = "";
             if(display.equals("customers")) {
@@ -128,13 +155,15 @@ public class AnalyticsHelper {
                names.add(purchaser);
             }
             
+            ///////////////////////////////////////////////////////
+            //////////SEPARATE QUERY//////////////////////////////
             //For each user/state we get the products they have bought
             for(int i=0; i < names.size(); ++i) {
             
                //create the entire query string based of the strings we have created individually
                //If you want to LIMIT and OFFSET the number of products, here is where you do that
                query = "SELECT " + select + " FROM " + searchFrom + categoryFrom + filter + 
-                       "AND " + name + " = '" + names.get(i) + "' " + orderBy + limitCols;
+                       "AND " + name + " = '" + names.get(i) + "' " + orderBy;
                System.out.println(query);
                rs = stmt.executeQuery(query);
                
@@ -191,18 +220,23 @@ public class AnalyticsHelper {
         }
     }
     
-    public static List<String> listProductsAlphabetically(HttpServletRequest request) {
+    public static List<String> listProductsAlphabetically() {
        List<String> products = new ArrayList<String>();
        ResultSet rs;
        Connection conn = null;
        Statement stmt = null;
        String categoryFilter = "";
-       String category = request.getParameter("categoryFilter");
        String limitCols = "LIMIT 10 OFFSET " + colOffset;
        
-       if(category != null && !category.isEmpty() && !category.equals("all")) {
-    	   categoryFilter = ", categories AS c WHERE p.cid = c.id AND c.id = " + category + "";
-       }
+       try {
+          String category = (String) session.getAttribute("categoryFilter");
+          if(category == null || category.equals(""))
+             return products;
+          
+          if(category != null && !category.isEmpty() && !category.equals("all")) {
+       	   categoryFilter = ", categories AS c WHERE p.cid = c.id AND c.id = " + category + "";
+          }
+       } catch(Exception e) {}
        
        try {
           try {
@@ -220,6 +254,7 @@ public class AnalyticsHelper {
           //populate list
           while (rs.next()) {
              String product = rs.getString("name");
+
              products.add(product);
           }
           return products;
@@ -251,6 +286,7 @@ public class AnalyticsHelper {
         Statement stmt = null;
         String limitRows = " LIMIT 20 OFFSET " + rowOffset;
         String limitCols = " LIMIT 10 OFFSET " + colOffset;
+        String products;
     	
     	try {
             try {
@@ -268,6 +304,8 @@ public class AnalyticsHelper {
                categoryFilter = "AND s.pid = p.id AND p.cid = c.id AND c.id = '" + category + "' ";
                productsFrom = ", products AS p";
             }
+            
+            products = ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p";
 
             //Get the topk ordering or users/states
             if(display.equals("customers"))
@@ -314,13 +352,13 @@ public class AnalyticsHelper {
 	        	String query = "";
 	        	if(display.equals("customers")) {
 	        		query = "SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product "
-	        				+ "FROM sales AS s, users AS u, products AS p" + categoryFrom 
-	        				+ filter + nameFilter + " ORDER BY p.name" + limitCols;
+	        				+ "FROM sales AS s, users AS u" + products + categoryFrom 
+	        				+ filter + nameFilter + " ORDER BY p.name";
 	        	}
 	        	else if(display.equals("states")) {
 	        		query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product "
-	        				+ "FROM sales AS s, users AS u, states AS t, products AS p" + categoryFrom
-	        				+  filter + nameFilter + " ORDER BY p.name" + limitCols;
+	        				+ "FROM sales AS s, users AS u, states AS t" + products + categoryFrom
+	        				+  filter + nameFilter + " ORDER BY p.name";
 	        	}
 	        	
 	        	System.out.println(query);
