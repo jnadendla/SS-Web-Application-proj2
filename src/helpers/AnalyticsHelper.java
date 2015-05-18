@@ -22,6 +22,7 @@ public class AnalyticsHelper {
         String searchFrom ="", categoryFrom = "";
         String categoryFilter = "", additionalFilter = "", category = "";
         String orderBy = "";
+        String limitRows="LIMIT 20 OFFSET 0";
         
         //Here we look at where we filter by user or customer and create a string that determines
         //what items we will want to select in the SELECT clause of the query. There is another
@@ -39,6 +40,7 @@ public class AnalyticsHelper {
                select = "u.name AS name, (s.price * s.quantity) AS total, p.name AS product";
                searchFrom = "users AS u, sales AS s, products AS p"; 
                additionalFilter = "u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
+    
             }
             else if(display.equals("states")) {
                select = "t.name AS name, (s.price * s.quantity) AS total, p.name AS product";
@@ -101,15 +103,16 @@ public class AnalyticsHelper {
             String query = "";
             String name = "";
             if(display.equals("customers")) {
+            	// NOTE - current limit seems to be applied to the number of sales
                 query = "SELECT u.name AS name FROM sales AS s, users AS u, products AS p"
                          + categoryFrom + " WHERE " + "p.id = s.pid AND u.id = s.uid " 
-                         + categoryFilter + "GROUP BY u.name ORDER BY u.name";
+                         + categoryFilter + "GROUP BY u.name ORDER BY u.name " + limitRows;
                 name = "u.name";
             }
             else if(display.equals("states")) {
                 query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p"
                          + categoryFrom + " WHERE " + "p.id = s.pid AND t.id = u.state AND u.id = s.uid "
-                         + categoryFilter + "GROUP BY t.name ORDER BY t.name";
+                         + categoryFilter + "GROUP BY t.name ORDER BY t.name " + limitRows;
                 name = "t.name";
             }
             
@@ -191,6 +194,7 @@ public class AnalyticsHelper {
        Statement stmt = null;
        String categoryFilter = "";
        String category = request.getParameter("categoryFilter");
+       String limitCols = "LIMIT 10 OFFSET 0";
        
        if(category != null && !category.isEmpty() && !category.equals("all")) {
     	   categoryFilter = ", categories AS c WHERE p.cid = c.id AND c.id = " + category + "";
@@ -205,7 +209,7 @@ public class AnalyticsHelper {
           }
           
           stmt = conn.createStatement();
-          String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY p.name";
+          String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY p.name " + limitCols;
           System.out.println("Product Query: " + query);
           rs = stmt.executeQuery(query);
           
