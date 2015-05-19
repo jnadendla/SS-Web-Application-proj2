@@ -80,6 +80,10 @@ if(colClick != null && colClick.equals("Next 10")) {
 			}
 
 					newrow = false;
+					if(i == products.size() - 1 && product == "") {
+					   getnext = true;
+					}
+					
 					//Loop back around if there are more sales to print and you
 					//are end of the row of products. You must have more sales available,
 					//or the current sale you are on must not have been placed in the table yet

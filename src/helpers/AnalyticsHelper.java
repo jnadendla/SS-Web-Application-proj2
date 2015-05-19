@@ -136,14 +136,14 @@ public class AnalyticsHelper {
             if(display.equals("customers")||display.equals("")) {
             	// NOTE - current limit seems to be applied to the number of sales
                 query = "SELECT u.name AS name FROM sales AS s, users AS u, products AS p"
-                         + categoryFrom + " WHERE " + "p.id = s.pid AND u.id = s.uid " 
-                         + categoryFilter + "GROUP BY u.name ORDER BY u.name " + limitRows;
+                         +  " WHERE " + "p.id = s.pid AND u.id = s.uid " 
+                         +  "GROUP BY u.name ORDER BY u.name " + limitRows;
                 name = "u.name";
             }
             else if(display.equals("states")) {
                 query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p"
-                         + categoryFrom + " WHERE " + "p.id = s.pid AND t.id = u.state AND u.id = s.uid "
-                         + categoryFilter + "GROUP BY t.name ORDER BY t.name " + limitRows;
+                         + " WHERE " + "p.id = s.pid AND t.id = u.state AND u.id = s.uid "
+                         + "GROUP BY t.name ORDER BY t.name " + limitRows;
                 name = "t.name";
             }
             
@@ -166,6 +166,12 @@ public class AnalyticsHelper {
                        "AND " + name + " = '" + names.get(i) + "' " + orderBy;
                System.out.println(query);
                rs = stmt.executeQuery(query);
+               
+               if(!rs.isBeforeFirst()) {
+                  Sales s = new Sales(names.get(i), 0.0, "");
+                  sales.add(s);
+                  continue;
+               }
                
                //populate list (we cannot return a ResultSet because it's bad programming).
                //Simply fill our list with sales by looping through the result set and getting
@@ -363,6 +369,12 @@ public class AnalyticsHelper {
 	        	
 	        	System.out.println(query);
 	            rs = stmt.executeQuery(query);
+	            
+   	            if(!rs.isBeforeFirst()) {
+   	               Sales s = new Sales(topk.get(i), 0.0, "");
+   	               sales.add(s);
+   	               continue;
+   	            }
 	            
 	            //populate list
 	            boolean everyOther = false;
