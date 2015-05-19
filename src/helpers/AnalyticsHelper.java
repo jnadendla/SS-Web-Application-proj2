@@ -77,7 +77,7 @@ public class AnalyticsHelper {
             if (display == null || display.equals("")) {
                return sales;
             }
-            if(display.equals("customers")) {
+            if(display.equals("customers") || display.equals("")) {
                select = "u.name AS name, (s.price * s.quantity) AS total, p.name AS product";
                searchFrom = "users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p"; 
                additionalFilter = "u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
@@ -102,7 +102,7 @@ public class AnalyticsHelper {
         try {
            String order = (String) session.getAttribute("sortFilter");
            if (order != null && !order.isEmpty())
-               if(order.equals("alphabetical")) {
+               if(order.equals("alphabetical") || order.equals("")) {
                   if(display.equals("customers")) {
                      orderBy = "ORDER BY u.name, p.name";
                   }
@@ -133,7 +133,7 @@ public class AnalyticsHelper {
             /////////////QUERY NAME ORDERING////////////////////////////
             String query = "";
             String name = "";
-            if(display.equals("customers")) {
+            if(display.equals("customers")||display.equals("")) {
             	// NOTE - current limit seems to be applied to the number of sales
                 query = "SELECT u.name AS name FROM sales AS s, users AS u, products AS p"
                          + categoryFrom + " WHERE " + "p.id = s.pid AND u.id = s.uid " 
@@ -308,7 +308,7 @@ public class AnalyticsHelper {
             products = ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p";
 
             //Get the topk ordering or users/states
-            if(display.equals("customers"))
+            if(display.equals("customers") || display.equals(""))
             	query = "SELECT u.name AS name FROM sales AS s, users AS u" + productsFrom
             	         + categoryFrom + " WHERE u.id = s.uid " + categoryFilter 
             	         + "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC" + limitRows;
@@ -344,13 +344,13 @@ public class AnalyticsHelper {
             	String name = topk.get(i);
          
             	String nameFilter = "";
-            	if(display.equals("customers"))
+            	if(display.equals("customers") || display.equals(""))
             		nameFilter = " AND u.name = '" + name + "'";
             	else if(display.equals("states"))
             		nameFilter = " AND t.name = '" + name + "'";
             	
 	        	String query = "";
-	        	if(display.equals("customers")) {
+	        	if(display.equals("customers") || display.equals("")) {
 	        		query = "SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product "
 	        				+ "FROM sales AS s, users AS u" + products + categoryFrom 
 	        				+ filter + nameFilter + " ORDER BY p.name";

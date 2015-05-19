@@ -1,5 +1,30 @@
 <%@page import="java.util.List" import="helpers.*"%>
 <%
+boolean nextRows = false;
+boolean nextCols = false;
+String colClick = request.getParameter("cols");
+String rowClick = request.getParameter("rows");
+if(colClick != null && colClick.equals("Next 10")) {
+   nextCols = true;
+} else if(rowClick != null && rowClick.equals("Next 20")) {
+   nextRows = true;
+}
+
+String displayFilter = request.getParameter("displayFilter");
+if(displayFilter == null) {
+	displayFilter = "";
+}
+
+String sortFilter = request.getParameter("sortFilter");
+if(sortFilter == null) {
+	sortFilter = "";
+}
+
+String categoryFilter = request.getParameter("categoryFilter");
+if(categoryFilter == null) {
+	categoryFilter = "";
+}
+
 	List<CategoryWithCount> categories = CategoriesHelper
 			.listCategories();
 %>
@@ -10,31 +35,28 @@
 			<!-- Put your part 2 code here -->
 			<ul class="nav nav-list">
 				<form action="analytics" method="GET">
-					<li><select name="categoryFilter">
+					<li><select name="categoryFilter" <%if(nextCols || nextRows) {%>disabled<%} %>>
 							<option value="all">Show All Categories</option>
 							<%
 									for (CategoryWithCount cwc : categories) {
 								%>
-							<option value=<%=cwc.getId() %>><%=cwc.getName()%></option>
+							<option value=<%=cwc.getId() %> <% if(categoryFilter.equals(Integer.toString(cwc.getId()))) { %> selected<%} %>><%=cwc.getName()%></option>
 
 							<%
 									}
 								%>
-					</select></li>
-					<br>
-					<li><select name="displayFilter">
-							<option value="customers">Display By</option>
-							<option value="customers">Customers</option>
-							<option value="states">States</option>
-					</select></li>
-					<br>
-					<li><select name="sortFilter">
-							<option value="alphabetical">Sort By</option>
-							<option value="alphabetical">Alphabetical</option>
-							<option value="topk">Top-K</option>
-					</select></li>
-					<br>
-					<li><input type="submit" value="Run Query"></li>
+					</select></li> <br>
+					<li><select name="displayFilter" <%if(nextCols || nextRows) {%>disabled<%} %>>
+							<option value="">Display By</option>
+							<option value="customers" <% if(displayFilter.equals("customers")) { %> selected<%} %>>Customers</option>
+							<option value="states" <% if(displayFilter.equals("states")) { %> selected<%} %>>States</option>
+					</select></li> <br>
+					<li><select name="sortFilter" <%if(nextCols || nextRows) {%>disabled<%} %>>
+							<option value="">Sort By</option>
+							<option value="alphabetical" <% if(sortFilter.equals("alphabetical")) { %> selected<%} %>>Alphabetical</option>
+							<option value="topk" <% if(sortFilter.equals("topk")) { %> selected<%} %>>Top-K</option>
+					</select></li> <br>
+					<li><input type="submit" value="Run Query" <%if(nextCols || nextRows) {%>disabled<%} %>></li>
 				</form>
 
 			</ul>
