@@ -35,11 +35,11 @@ if(colClick != null && colClick.equals("Next 10")) {
 			<%
 				}
 			%>
-			<th>
+			<td>
 				<form action="">
 					<input type="submit" value="Next 10" name="cols" <%if (numCols < 10) { %>disabled <%} %>>
 				</form>
-			</th>
+			</td>
 		</tr>
 		<tr></tr>
 		<%
