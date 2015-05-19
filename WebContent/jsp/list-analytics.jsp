@@ -17,6 +17,8 @@ if(colClick != null && colClick.equals("Next 10")) {
 	List<String> products = AnalyticsHelper.listProductsAlphabetically();
 	if (!sales.isEmpty() && !products.isEmpty()) {
 		Iterator<Sales> salesIter = sales.iterator();
+		int numCols = products.size();
+		int numRows = 0;
 %>
 <table class="table table-striped" align="center">
 	<thead>
@@ -35,7 +37,7 @@ if(colClick != null && colClick.equals("Next 10")) {
 			%>
 			<th>
 				<form action="">
-					<input type="submit" value="Next 10" name="cols">
+					<input type="submit" value="Next 10" name="cols" <%if (numCols < 10) { %>disabled <%} %>>
 				</form>
 			</th>
 		</tr>
@@ -45,7 +47,7 @@ if(colClick != null && colClick.equals("Next 10")) {
 				boolean newrow = false;
 				boolean getnext = true;
 				Sales s = null;
-				for (int i = 0, users = 0; i < products.size(); ++i) {
+				for (int i = 0; i < products.size(); ++i) {
 					//System.out.println(i);
 					if (getnext && salesIter.hasNext()) {
 						s = salesIter.next();
@@ -58,7 +60,7 @@ if(colClick != null && colClick.equals("Next 10")) {
 					if (!currUser.equals(purchaser) && i == 0) {
 						currUser = purchaser;
 						newrow = true;
-						users++;
+						numRows++;
 						--i;
 					}
 					if (newrow) {
@@ -92,7 +94,7 @@ if(colClick != null && colClick.equals("Next 10")) {
 		<tr>
 			<td>
 				<form action="">
-					<input type="submit" value="Next 20" name="rows">
+					<input type="submit" value="Next 20" name="rows" <%if (numRows < 20) { %>disabled <%} %>>
 				</form>
 			</td>
 		</tr>
