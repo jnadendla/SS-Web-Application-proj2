@@ -619,8 +619,8 @@ public class AnalyticsHelper {
 		}
 	}
 
-	public static double getTotal(HttpServletRequest request, String purchaser)
-			throws Exception {
+	public static double getPurchaserTotal(HttpServletRequest request,
+			String purchaser) throws Exception {
 		double total = 0;
 
 		ResultSet rs;
@@ -654,6 +654,35 @@ public class AnalyticsHelper {
 				total += rs.getDouble("total");
 			}
 		}
+		
+		stmt.close();
+		conn.close();
+
+		return total;
+	}
+
+	public static double getProductTotal(HttpServletRequest request,
+			String product) throws Exception {
+		double total = 0;
+
+		ResultSet rs;
+		Connection conn = HelperUtils.connect();
+
+		PreparedStatement stmt = null;
+
+		stmt = conn
+				.prepareStatement("SELECT (s.price * s.quantity) AS total "
+						+ "FROM sales AS s, products AS p WHERE p.name = ? AND s.pid = p.id");
+
+		stmt.setString(1, product);
+		rs = stmt.executeQuery();
+
+		while (rs.next()) {
+			total += rs.getDouble("total");
+		}
+		
+		stmt.close();
+		conn.close();
 
 		return total;
 	}
