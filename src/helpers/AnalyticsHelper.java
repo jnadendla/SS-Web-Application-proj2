@@ -1,6 +1,7 @@
 package helpers;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -53,6 +54,8 @@ public class AnalyticsHelper {
            session.setAttribute("categoryFilter", c);
            session.setAttribute("sortFilter", o);
         }       
+        
+        addIndeciesToTables();
                 
         //This area determines what to filter the category by. If ALL is selected by
         //the category, we leave the filter and from strings as empty and then they
@@ -75,6 +78,7 @@ public class AnalyticsHelper {
         try {
             display = (String) session.getAttribute("displayFilter");
             if (display == null || display.equals("")) {
+               dropIndeciesOnTables();
                return sales;
             }
             if(display.equals("customers") || display.equals("")) {
@@ -112,6 +116,7 @@ public class AnalyticsHelper {
                else if(order.equals("topk")) {
                   //User helper method to build list and then return immediately
             	  sales = listByTopK(display, categoryFrom, category, filter);//////TOPK ORDER HAPPENS IN A SEPARATE FUNCIONT CALLED HERE
+            	  dropIndeciesOnTables();
             	  return sales;
                }
        } catch (Exception e) {
@@ -124,6 +129,7 @@ public class AnalyticsHelper {
                 conn = HelperUtils.connect();
             } catch (Exception e) {
                 System.err.println("Internal Server Error. This shouldn't happen.");
+                dropIndeciesOnTables();
                 return sales;
             }
             stmt = conn.createStatement();
@@ -212,9 +218,12 @@ public class AnalyticsHelper {
                   }
                }
             }
+            
+            dropIndeciesOnTables();
             return sales;
         } catch (Exception e) {
             System.err.println("Some error happened!<br/>" + e.getLocalizedMessage());
+            dropIndeciesOnTables();
             return sales;
         } finally {
             try {
@@ -427,5 +436,109 @@ public class AnalyticsHelper {
     	
     	return sales;
     }
-
+    
+    private static void addIndeciesToTables() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        
+        try {
+            try {
+                conn = HelperUtils.connect();
+            } catch (Exception e) {
+                System.err.println("Internal Server Error. This shouldn't happen.");
+            }
+            String index = "CREATE INDEX idx_name_onUsers ON users (name)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_role_onUsers ON users (role)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_state_onUsers ON users (state)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_name_onStates ON states (name)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_name_onCategories ON categories (name)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_cid_onProducts ON products (cid)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_uid_onSales ON sales (uid)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_pid_onSales ON sales (pid)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_quantity_onSales ON sales (quantity)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "CREATE INDEX idx_price_onSales ON sales (price)";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+        } catch (Exception e) {
+            System.err.println("Some error happened adding index!<br/>" + e.getLocalizedMessage());
+        } finally {
+            try {
+                stmt.close();
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private static void dropIndeciesOnTables() {
+    	Connection conn = null;
+        PreparedStatement stmt = null;
+        
+        try {
+            try {
+                conn = HelperUtils.connect();
+            } catch (Exception e) {
+                System.err.println("Internal Server Error. This shouldn't happen.");
+            }
+            String index = "DROP INDEX idx_name_onUsers";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_role_onUsers";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_state_onUsers";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_name_onStates";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_name_onCategories";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_cid_onProducts";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_uid_onSales";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_pid_onSales";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_quantity_onSales";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            index = "DROP INDEX idx_price_onSales";
+            stmt = conn.prepareStatement(index);
+            stmt.execute();
+            
+        } catch (Exception e) {
+            System.err.println("Some error happened dropping index!<br/>" + e.getLocalizedMessage());
+        } finally {
+            try {
+                stmt.close();
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
