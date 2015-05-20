@@ -21,7 +21,7 @@ public class AnalyticsHelper {
         List<String> names = new ArrayList<String>();
         ResultSet rs;
         Connection conn = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         String select = "";
         String searchFrom ="", categoryFrom = "";
         String categoryFilter = "", additionalFilter = "", category = "";
@@ -132,7 +132,7 @@ public class AnalyticsHelper {
                 dropIndeciesOnTables();
                 return sales;
             }
-            stmt = conn.createStatement();
+            //stmt = conn.createStatement();
 
             //Get the aplphabetical ordering or users/states, if you want to LIMIT and
             //OFFSET the number of users, here is where you do that
@@ -154,7 +154,8 @@ public class AnalyticsHelper {
             }
             
             System.out.println(query);
-            rs = stmt.executeQuery(query);     
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();     
             //populate list
             while (rs.next()) {
                String purchaser = rs.getString("name");
@@ -171,7 +172,8 @@ public class AnalyticsHelper {
                query = "SELECT " + select + " FROM " + searchFrom + categoryFrom + filter + 
                        "AND " + name + " = '" + names.get(i) + "' " + orderBy;
                System.out.println(query);
-               rs = stmt.executeQuery(query);
+               stmt = conn.prepareStatement(query);
+               rs = stmt.executeQuery();
                
                if(!rs.isBeforeFirst()) {
                   Sales s = new Sales(names.get(i), 0.0, "");
@@ -239,7 +241,7 @@ public class AnalyticsHelper {
        List<String> products = new ArrayList<String>();
        ResultSet rs;
        Connection conn = null;
-       Statement stmt = null;
+       PreparedStatement stmt = null;
        String categoryFilter = "";
        String limitCols = "LIMIT 10 OFFSET " + colOffset;
        
@@ -261,10 +263,11 @@ public class AnalyticsHelper {
               return products;
           }
           
-          stmt = conn.createStatement();
+          //stmt = conn.createStatement();
           String query = "SELECT p.name AS name FROM products AS p" + categoryFilter + " ORDER BY p.name " + limitCols;
           System.out.println("Product Query: " + query);
-          rs = stmt.executeQuery(query);
+          stmt = conn.prepareStatement(query);
+          rs = stmt.executeQuery();
           
           //populate list
           while (rs.next()) {
@@ -298,7 +301,7 @@ public class AnalyticsHelper {
     	List<String> topk = new ArrayList<String>();
     	ResultSet rs, order;
         Connection conn = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         String limitRows = " LIMIT 20 OFFSET " + rowOffset;
         String limitCols = " LIMIT 10 OFFSET " + colOffset;
         String products;
@@ -310,7 +313,7 @@ public class AnalyticsHelper {
                 System.err.println("Internal Server Error. This shouldn't happen.");
                 return sales;
             }
-            stmt = conn.createStatement();
+            //stmt = conn.createStatement();
             String query = "";
             
             String categoryFilter = "";
@@ -333,7 +336,8 @@ public class AnalyticsHelper {
             	         + "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC" + limitRows;
             
             System.out.println(query);
-            order = stmt.executeQuery(query);
+            stmt = conn.prepareStatement(query);
+            order = stmt.executeQuery();
             
             //populate list
             while (order.next()) {
@@ -352,7 +356,7 @@ public class AnalyticsHelper {
                 System.err.println("Internal Server Error. This shouldn't happen.");
                 return sales;
             }
-            stmt = conn.createStatement();
+            //stmt = conn.createStatement();
             
             //Loop through all the names ordered by topk and query sales information in topk order
             for(int i=0; i<topk.size(); ++i) {
@@ -377,7 +381,8 @@ public class AnalyticsHelper {
 	        	}
 	        	
 	        	System.out.println(query);
-	            rs = stmt.executeQuery(query);
+	        	stmt = conn.prepareStatement(query);
+	            rs = stmt.executeQuery();
 	            
    	            if(!rs.isBeforeFirst()) {
    	               Sales s = new Sales(topk.get(i), 0.0, "");
