@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 public class AnalyticsHelper {
+
 	private static HttpSession session;
 	private static int rowOffset = 0;
 	private static int colOffset = 0;
@@ -22,7 +23,7 @@ public class AnalyticsHelper {
 		List<String> names = new ArrayList<String>();
 		ResultSet rs;
 		Connection conn = null;
-		Statement stmt = null;
+		PreparedStatement stmt = null;
 		String select = "";
 		String searchFrom = "", categoryFrom = "";
 		String categoryFilter = "", additionalFilter = "", category = "";
@@ -55,6 +56,8 @@ public class AnalyticsHelper {
 			session.setAttribute("sortFilter", o);
 		}
 
+		addIndeciesToTables();
+
 		// This area determines what to filter the category by. If ALL is
 		// selected by
 		// the category, we leave the filter and from strings as empty and then
@@ -83,6 +86,7 @@ public class AnalyticsHelper {
 		try {
 			display = (String) session.getAttribute("displayFilter");
 			if (display == null || display.equals("")) {
+				dropIndeciesOnTables();
 				return sales;
 			}
 			if (display.equals("customers") || display.equals("")) {
@@ -128,6 +132,7 @@ public class AnalyticsHelper {
 																				// FUNCIONT
 																				// CALLED
 																				// HERE
+					dropIndeciesOnTables();
 					return sales;
 				}
 		} catch (Exception e) {
@@ -140,9 +145,10 @@ public class AnalyticsHelper {
 			} catch (Exception e) {
 				System.err
 						.println("Internal Server Error. This shouldn't happen.");
+				dropIndeciesOnTables();
 				return sales;
 			}
-			stmt = conn.createStatement();
+			// stmt = conn.createStatement();
 
 			// Get the aplphabetical ordering or users/states, if you want to
 			// LIMIT and
@@ -167,7 +173,8 @@ public class AnalyticsHelper {
 			}
 
 			System.out.println(query);
-			rs = stmt.executeQuery(query);
+			stmt = conn.prepareStatement(query);
+			rs = stmt.executeQuery();
 			// populate list
 			while (rs.next()) {
 				String purchaser = rs.getString("name");
@@ -187,7 +194,8 @@ public class AnalyticsHelper {
 						+ categoryFrom + filter + "AND " + name + " = '"
 						+ names.get(i) + "' " + orderBy;
 				System.out.println(query);
-				rs = stmt.executeQuery(query);
+				stmt = conn.prepareStatement(query);
+				rs = stmt.executeQuery();
 
 				if (!rs.isBeforeFirst()) {
 					Sales s = new Sales(names.get(i), 0.0, "");
@@ -241,10 +249,13 @@ public class AnalyticsHelper {
 					}
 				}
 			}
+
+			dropIndeciesOnTables();
 			return sales;
 		} catch (Exception e) {
 			System.err.println("Some error happened!<br/>"
 					+ e.getLocalizedMessage());
+			dropIndeciesOnTables();
 			return sales;
 		} finally {
 			try {
@@ -260,7 +271,7 @@ public class AnalyticsHelper {
 		List<String> products = new ArrayList<String>();
 		ResultSet rs;
 		Connection conn = null;
-		Statement stmt = null;
+		PreparedStatement stmt = null;
 		String categoryFilter = "";
 		String limitCols = "LIMIT 10 OFFSET " + colOffset;
 
@@ -286,11 +297,12 @@ public class AnalyticsHelper {
 				return products;
 			}
 
-			stmt = conn.createStatement();
+			// stmt = conn.createStatement();
 			String query = "SELECT p.name AS name FROM products AS p"
 					+ categoryFilter + " ORDER BY p.name " + limitCols;
 			System.out.println("Product Query: " + query);
-			rs = stmt.executeQuery(query);
+			stmt = conn.prepareStatement(query);
+			rs = stmt.executeQuery();
 
 			// populate list
 			while (rs.next()) {
@@ -326,7 +338,7 @@ public class AnalyticsHelper {
 		List<String> topk = new ArrayList<String>();
 		ResultSet rs, order;
 		Connection conn = null;
-		Statement stmt = null;
+		PreparedStatement stmt = null;
 		String limitRows = " LIMIT 20 OFFSET " + rowOffset;
 		String limitCols = " LIMIT 10 OFFSET " + colOffset;
 		String products;
@@ -339,7 +351,7 @@ public class AnalyticsHelper {
 						.println("Internal Server Error. This shouldn't happen.");
 				return sales;
 			}
-			stmt = conn.createStatement();
+			// stmt = conn.createStatement();
 			String query = "";
 
 			String categoryFilter = "";
@@ -372,7 +384,8 @@ public class AnalyticsHelper {
 						+ limitRows;
 
 			System.out.println(query);
-			order = stmt.executeQuery(query);
+			stmt = conn.prepareStatement(query);
+			order = stmt.executeQuery();
 
 			// populate list
 			while (order.next()) {
@@ -393,7 +406,7 @@ public class AnalyticsHelper {
 						.println("Internal Server Error. This shouldn't happen.");
 				return sales;
 			}
-			stmt = conn.createStatement();
+			// stmt = conn.createStatement();
 
 			// Loop through all the names ordered by topk and query sales
 			// information in topk order
@@ -426,7 +439,8 @@ public class AnalyticsHelper {
 				}
 
 				System.out.println(query);
-				rs = stmt.executeQuery(query);
+				stmt = conn.prepareStatement(query);
+				rs = stmt.executeQuery();
 
 				if (!rs.isBeforeFirst()) {
 					Sales s = new Sales(topk.get(i), 0.0, "");
@@ -494,6 +508,115 @@ public class AnalyticsHelper {
 		return sales;
 	}
 
+	private static void addIndeciesToTables() {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+
+		try {
+			try {
+				conn = HelperUtils.connect();
+			} catch (Exception e) {
+				System.err
+						.println("Internal Server Error. This shouldn't happen.");
+			}
+			String index = "CREATE INDEX idx_name_onUsers ON users (name)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_role_onUsers ON users (role)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_state_onUsers ON users (state)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_name_onStates ON states (name)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_name_onCategories ON categories (name)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_cid_onProducts ON products (cid)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_uid_onSales ON sales (uid)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_pid_onSales ON sales (pid)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_quantity_onSales ON sales (quantity)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "CREATE INDEX idx_price_onSales ON sales (price)";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+		} catch (Exception e) {
+			System.err.println("Some error happened adding index!<br/>"
+					+ e.getLocalizedMessage());
+		} finally {
+			try {
+				stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void dropIndeciesOnTables() {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+
+		try {
+			try {
+				conn = HelperUtils.connect();
+			} catch (Exception e) {
+				System.err
+						.println("Internal Server Error. This shouldn't happen.");
+			}
+			String index = "DROP INDEX idx_name_onUsers";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_role_onUsers";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_state_onUsers";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_name_onStates";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_name_onCategories";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_cid_onProducts";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_uid_onSales";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_pid_onSales";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_quantity_onSales";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+			index = "DROP INDEX idx_price_onSales";
+			stmt = conn.prepareStatement(index);
+			stmt.execute();
+
+		} catch (Exception e) {
+			System.err.println("Some error happened dropping index!<br/>"
+					+ e.getLocalizedMessage());
+		} finally {
+			try {
+				stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public static double getTotal(HttpServletRequest request, String purchaser)
 			throws Exception {
 		double total = 0;
@@ -506,10 +629,10 @@ public class AnalyticsHelper {
 		String displayFilter = null;
 
 		displayFilter = request.getParameter("displayFilter");
-		
+
 		System.out.println(displayFilter);
 
-		if (displayFilter == null ) {
+		if (displayFilter == null) {
 			return 0; // first page load
 		} else {
 			if (displayFilter.equals("customers") || displayFilter.isEmpty()) {
