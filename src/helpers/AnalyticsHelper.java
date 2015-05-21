@@ -632,27 +632,27 @@ public class AnalyticsHelper {
 
 		System.out.println(displayFilter);
 
-		if (displayFilter == null) {
-			return 0; // first page load
-		} else {
-			if (displayFilter.equals("customers") || displayFilter.isEmpty()) {
-				stmt = conn
-						.prepareStatement("SELECT (s.price * s.quantity) AS total "
-								+ "FROM sales AS s, users AS u WHERE u.name = ? AND s.uid = u.id");
-			} else if (displayFilter.equals("states")) {
-				stmt = conn
-						.prepareStatement("SELECT (s.price * s.quantity) AS total "
-								+ "FROM sales AS s, users AS u, states AS st WHERE st.name = ? AND st.id = u.state AND s.uid = u.id");
-			}
-
-			stmt.setString(1, purchaser);
-			rs = stmt.executeQuery();
-
-			while (rs.next()) {
-				total += rs.getDouble("total");
-			}
+		if(displayFilter == null) {
+			displayFilter = "customers";
 		}
 		
+		if (displayFilter.equals("customers") || displayFilter.isEmpty()) {
+			stmt = conn
+					.prepareStatement("SELECT (s.price * s.quantity) AS total "
+							+ "FROM sales AS s, users AS u WHERE u.name = ? AND s.uid = u.id");
+		} else if (displayFilter.equals("states")) {
+			stmt = conn
+					.prepareStatement("SELECT (s.price * s.quantity) AS total "
+							+ "FROM sales AS s, users AS u, states AS st WHERE st.name = ? AND st.id = u.state AND s.uid = u.id");
+		}
+
+		stmt.setString(1, purchaser);
+		rs = stmt.executeQuery();
+
+		while (rs.next()) {
+			total += rs.getDouble("total");
+		}
+
 		stmt.close();
 		conn.close();
 
@@ -678,7 +678,7 @@ public class AnalyticsHelper {
 		while (rs.next()) {
 			total += rs.getDouble("total");
 		}
-		
+
 		stmt.close();
 		conn.close();
 
