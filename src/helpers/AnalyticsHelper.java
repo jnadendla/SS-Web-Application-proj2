@@ -159,22 +159,22 @@ public class AnalyticsHelper {
 			if (display.equals("customers") || display.equals("")) {
 				// NOTE - current limit seems to be applied to the number of
 				// sales
-				query = "SELECT u.name AS name FROM sales AS s, users AS u, products AS p"
+				query = "SELECT u.name AS name FROM users AS u"
 						+ " WHERE "
-						+ "p.id = s.pid AND u.id = s.uid AND u.role = ? "
+						+ "u.role = ? "
 						+ "GROUP BY u.name ORDER BY u.name " + limitRows;
 				name = "u.name";
 			} else if (display.equals("states")) {
-				query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p"
-						+ " WHERE "
-						+ "p.id = s.pid AND t.id = u.state AND u.id = s.uid AND u.role = ? "
+				query = "SELECT t.name AS name FROM states AS t "
 						+ "GROUP BY t.name ORDER BY t.name " + limitRows;
 				name = "t.name";
 			}
 
 			System.out.println(query);
 			stmt = conn.prepareStatement(query);
-			stmt.setString(1, "customer");
+			if(name.equals("u.name")) {
+				stmt.setString(1, "customer");
+			}
 			rs = stmt.executeQuery();
 			// populate list
 			while (rs.next()) {
@@ -186,7 +186,7 @@ public class AnalyticsHelper {
 			// ////////SEPARATE QUERY//////////////////////////////
 			// For each user/state we get the products they have bought
 			for (int i = 0; i < names.size(); ++i) {
-
+				
 				// create the entire query string based of the strings we have
 				// created individually
 				// If you want to LIMIT and OFFSET the number of products, here
