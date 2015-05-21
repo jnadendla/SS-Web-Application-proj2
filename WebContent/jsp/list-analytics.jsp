@@ -3,18 +3,21 @@
 <%@page import="java.util.List" import="java.util.Iterator"
 	import="helpers.*"%>
 <%
-boolean nextRows = false;
-boolean nextCols = false;
-String colClick = request.getParameter("cols");
-String rowClick = request.getParameter("rows");
-if(colClick != null && colClick.equals("Next 10")) {
-   nextCols = true;
-} else if(rowClick != null && rowClick.equals("Next 20")) {
-   nextRows = true;
-}
+	boolean nextRows = false;
+	boolean nextCols = false;
+	String colClick = request.getParameter("cols");
+	String rowClick = request.getParameter("rows");
+	if (colClick != null && colClick.equals("Next 10")) {
+		System.out.println("clicked next 10");
+		nextCols = true;
+	} else if (rowClick != null && rowClick.equals("Next 20")) {
+		nextRows = true;
+	}
 
-	List<Sales> sales = AnalyticsHelper.listSales(request, nextCols, nextRows);
-	List<String> products = AnalyticsHelper.listProductsAlphabetically();
+	List<Sales> sales = AnalyticsHelper.listSales(request, nextCols,
+			nextRows);
+	List<String> products = AnalyticsHelper
+			.listProductsAlphabetically();
 	if (!sales.isEmpty() && !products.isEmpty()) {
 		Iterator<Sales> salesIter = sales.iterator();
 		int numCols = products.size();
@@ -31,19 +34,24 @@ if(colClick != null && colClick.equals("Next 10")) {
 					for (int k = 0; k < products.size(); ++k) {
 						String product = products.get(k);
 			%>
-			<th width="50%"><B><%=product + " ("+AnalyticsHelper.getProductTotal(request, product)+")"%></B></th>
+			<th width="50%"><B><%=product + " ("
+							+ AnalyticsHelper.getProductTotal(request, product)
+							+ ")"%></B></th>
 			<%
 				}
 			%>
 			<td>
 				<form action="">
-					<input type="submit" value="Next 10" name="cols" <%if (numCols < 10) { %>disabled <%} %>>
+					<input type="submit" value="Next 10" name="cols"
+						<%if (numCols < 10) {%> disabled <%}%>>
 				</form>
 			</td>
 		</tr>
 		<tr></tr>
 		<%
 			String currUser = "";
+				boolean emptyRow = false;
+				
 				boolean newrow = false;
 				boolean getnext = true;
 				Sales s = null;
@@ -62,11 +70,19 @@ if(colClick != null && colClick.equals("Next 10")) {
 						newrow = true;
 						numRows++;
 						--i;
+						if(product.equals("")){
+							emptyRow = true;
+						} else {
+							emptyRow = false;
+						}
 					}
 					if (newrow) {
 		%>
 		<tr></tr>
-		<td><B><%=purchaser + " ("+AnalyticsHelper.getPurchaserTotal(request, purchaser)+")"%></B></td>
+		<td><B><%=purchaser
+								+ " ("
+								+ AnalyticsHelper.getPurchaserTotal(request,
+										purchaser) + ")"%></B></td>
 		<%
 			} else if (products.get(i).equals(product)) {
 						getnext = true;
@@ -80,17 +96,17 @@ if(colClick != null && colClick.equals("Next 10")) {
 			}
 
 					newrow = false;
-					if(i == products.size() - 1 && product == "") {
-					   getnext = true;
+					if (i == products.size() - 1 && product == "" && emptyRow == true) {
+						getnext = true;
 					}
-					
+
 					//Loop back around if there are more sales to print and you
 					//are end of the row of products. You must have more sales available,
 					//or the current sale you are on must not have been placed in the table yet
 					if (i == products.size() - 1
 							&& (salesIter.hasNext() || getnext == false)) {
-						System.out.println(getnext);
-						
+						//System.out.println(getnext);
+
 						i = -1;
 					}
 				}
@@ -98,7 +114,8 @@ if(colClick != null && colClick.equals("Next 10")) {
 		<tr>
 			<td>
 				<form action="">
-					<input type="submit" value="Next 20" name="rows" <%if (numRows < 20) { %>disabled <%} %>>
+					<input type="submit" value="Next 20" name="rows"
+						<%if (numRows < 20) {%> disabled <%}%>>
 				</form>
 			</td>
 		</tr>

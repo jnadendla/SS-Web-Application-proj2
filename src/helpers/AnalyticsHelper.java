@@ -159,10 +159,9 @@ public class AnalyticsHelper {
 			if (display.equals("customers") || display.equals("")) {
 				// NOTE - current limit seems to be applied to the number of
 				// sales
-				query = "SELECT u.name AS name FROM users AS u"
-						+ " WHERE "
-						+ "u.role = ? "
-						+ "GROUP BY u.name ORDER BY u.name " + limitRows;
+				query = "SELECT u.name AS name FROM users AS u" + " WHERE "
+						+ "u.role = ? " + "GROUP BY u.name ORDER BY u.name "
+						+ limitRows;
 				name = "u.name";
 			} else if (display.equals("states")) {
 				query = "SELECT t.name AS name FROM states AS t "
@@ -172,7 +171,7 @@ public class AnalyticsHelper {
 
 			System.out.println(query);
 			stmt = conn.prepareStatement(query);
-			if(name.equals("u.name")) {
+			if (name.equals("u.name")) {
 				stmt.setString(1, "customer");
 			}
 			rs = stmt.executeQuery();
@@ -186,7 +185,7 @@ public class AnalyticsHelper {
 			// ////////SEPARATE QUERY//////////////////////////////
 			// For each user/state we get the products they have bought
 			for (int i = 0; i < names.size(); ++i) {
-				
+
 				// create the entire query string based of the strings we have
 				// created individually
 				// If you want to LIMIT and OFFSET the number of products, here
@@ -621,6 +620,16 @@ public class AnalyticsHelper {
 
 	public static double getPurchaserTotal(HttpServletRequest request,
 			String purchaser) throws Exception {
+		session = request.getSession();
+		String d = request.getParameter("displayFilter");
+		String c = request.getParameter("categoryFilter");
+		String o = request.getParameter("sortFilter");
+		if (d != null && !d.equals("") && o != null && !o.equals("")) {
+			session.setAttribute("displayFilter", d);
+			session.setAttribute("categoryFilter", c);
+			session.setAttribute("sortFilter", o);
+		}
+
 		double total = 0;
 
 		ResultSet rs;
@@ -632,17 +641,18 @@ public class AnalyticsHelper {
 
 		displayFilter = request.getParameter("displayFilter");
 
-		System.out.println(displayFilter);
+		// System.out.println(displayFilter);
 
-		if(displayFilter == null) {
-			displayFilter = "customers";
+		if (displayFilter == null) {
+			displayFilter = (String) session.getAttribute("displayFilter");
 		}
-		
+
 		if (displayFilter.equals("customers") || displayFilter.isEmpty()) {
 			stmt = conn
 					.prepareStatement("SELECT (s.price * s.quantity) AS total "
 							+ "FROM sales AS s, users AS u WHERE u.name = ? AND s.uid = u.id");
 		} else if (displayFilter.equals("states")) {
+			//System.out.println(purchaser);
 			stmt = conn
 					.prepareStatement("SELECT (s.price * s.quantity) AS total "
 							+ "FROM sales AS s, users AS u, states AS st WHERE st.name = ? AND st.id = u.state AND s.uid = u.id");
