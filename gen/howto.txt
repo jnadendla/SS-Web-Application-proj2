@@ -1,0 +1,12 @@
+run this command anywhere from the command line:
+
+java -jar DataGenerator.jar smalldb.json
+
+-----or----
+
+java -jar DataGenerator.jar mediumdb.json
+
+
+If your database is not called "cse135" in pgAdmin you will need
+to open the json files and change the name of your database. 
+Username and password should not matter.
