@@ -342,6 +342,8 @@ public class AnalyticsHelper {
 		String limitRows = " LIMIT 20 OFFSET " + rowOffset;
 		String limitCols = " LIMIT 10 OFFSET " + colOffset;
 		String products;
+		
+		List<String> purchasers = new ArrayList<String>();
 
 		try {
 			try {
@@ -365,8 +367,10 @@ public class AnalyticsHelper {
 			products = ", (SELECT * FROM products AS n ORDER BY n.name"
 					+ limitCols + ") p";
 
+			String pQuery = "";
+			
 			// Get the topk ordering or users/states
-			if (display.equals("customers") || display.equals(""))
+			if (display.equals("customers") || display.equals("")){
 				query = "SELECT u.name AS name FROM sales AS s, users AS u"
 						+ productsFrom
 						+ categoryFrom
@@ -374,7 +378,12 @@ public class AnalyticsHelper {
 						+ categoryFilter
 						+ "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC"
 						+ limitRows;
-			else if (display.equals("states"))
+				
+				pQuery = "SELECT u.name AS name FROM users AS u" + " WHERE "
+						+ "u.role = 'customer' " + "GROUP BY u.name ORDER BY u.name "
+						+ limitRows;
+			}
+			else if (display.equals("states")) {
 				query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t"
 						+ productsFrom
 						+ categoryFrom
@@ -382,6 +391,10 @@ public class AnalyticsHelper {
 						+ categoryFilter
 						+ "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC"
 						+ limitRows;
+				
+				pQuery = "SELECT t.name AS name FROM states AS t "
+						+ "GROUP BY t.name ORDER BY t.name " + limitRows;
+			}
 
 			System.out.println(query);
 			stmt = conn.prepareStatement(query);
@@ -392,6 +405,22 @@ public class AnalyticsHelper {
 			while (order.next()) {
 				String user = order.getString("name");
 				topk.add(user);
+			}
+			
+			stmt = conn.prepareStatement(pQuery);
+			order = stmt.executeQuery();
+			
+			while(order.next()) {
+				String purchaser = order.getString("name");
+				purchasers.add(purchaser);
+			}
+			
+			if(topk.size() < 20) {
+				for(int i = 0; i < purchasers.size(); i++) {
+					if(!topk.contains(purchasers.get(i))) {
+						topk.add(purchasers.get(i));
+					}
+				}
 			}
 		} catch (Exception e) {
 			System.err.println("Some error happened!<br/>"
