@@ -47,12 +47,12 @@ if(categoryFilter == null) {
 								%>
 					</select></li> <br>
 					<li><select name="displayFilter" <%if(nextCols || nextRows) {%>disabled<%} %>>
-							<option value="">Display By</option>
+							<option value="customers">Display By</option>
 							<option value="customers" <% if(displayFilter.equals("customers")) { %> selected<%} %>>Customers</option>
 							<option value="states" <% if(displayFilter.equals("states")) { %> selected<%} %>>States</option>
 					</select></li> <br>
 					<li><select name="sortFilter" <%if(nextCols || nextRows) {%>disabled<%} %>>
-							<option value="">Sort By</option>
+							<option value="alphabetical">Sort By</option>
 							<option value="alphabetical" <% if(sortFilter.equals("alphabetical")) { %> selected<%} %>>Alphabetical</option>
 							<option value="topk" <% if(sortFilter.equals("topk")) { %> selected<%} %>>Top-K</option>
 					</select></li> <br>

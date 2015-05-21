@@ -66,7 +66,7 @@ if(colClick != null && colClick.equals("Next 10")) {
 					if (newrow) {
 		%>
 		<tr></tr>
-		<td><B><%=purchaser%></B></td>
+		<td><B><%=purchaser + " ("+AnalyticsHelper.getTotal(request, purchaser)+")"%></B></td>
 		<%
 			} else if (products.get(i).equals(product)) {
 						getnext = true;
