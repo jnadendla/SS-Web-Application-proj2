@@ -161,19 +161,20 @@ public class AnalyticsHelper {
 				// sales
 				query = "SELECT u.name AS name FROM sales AS s, users AS u, products AS p"
 						+ " WHERE "
-						+ "p.id = s.pid AND u.id = s.uid "
+						+ "p.id = s.pid AND u.id = s.uid AND u.role = ? "
 						+ "GROUP BY u.name ORDER BY u.name " + limitRows;
 				name = "u.name";
 			} else if (display.equals("states")) {
 				query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p"
 						+ " WHERE "
-						+ "p.id = s.pid AND t.id = u.state AND u.id = s.uid "
+						+ "p.id = s.pid AND t.id = u.state AND u.id = s.uid AND u.role = ? "
 						+ "GROUP BY t.name ORDER BY t.name " + limitRows;
 				name = "t.name";
 			}
 
 			System.out.println(query);
 			stmt = conn.prepareStatement(query);
+			stmt.setString(1, "customer");
 			rs = stmt.executeQuery();
 			// populate list
 			while (rs.next()) {
@@ -370,7 +371,7 @@ public class AnalyticsHelper {
 				query = "SELECT u.name AS name FROM sales AS s, users AS u"
 						+ productsFrom
 						+ categoryFrom
-						+ " WHERE u.id = s.uid "
+						+ " WHERE u.id = s.uid AND u.role = ? "
 						+ categoryFilter
 						+ "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC"
 						+ limitRows;
@@ -378,13 +379,14 @@ public class AnalyticsHelper {
 				query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t"
 						+ productsFrom
 						+ categoryFrom
-						+ " WHERE t.id = u.state AND u.id = s.uid "
+						+ " WHERE t.id = u.state AND u.id = s.uid AND u.role = ? "
 						+ categoryFilter
 						+ "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC"
 						+ limitRows;
 
 			System.out.println(query);
 			stmt = conn.prepareStatement(query);
+			stmt.setString(1, "customer");
 			order = stmt.executeQuery();
 
 			// populate list
