@@ -573,12 +573,7 @@ public class AnalyticsHelper {
 			index = "CREATE INDEX idx_pid_onSales ON sales (pid)";
 			stmt = conn.prepareStatement(index);
 			stmt.execute();
-			index = "CREATE INDEX idx_quantity_onSales ON sales (quantity)";
-			stmt = conn.prepareStatement(index);
-			stmt.execute();
-			index = "CREATE INDEX idx_price_onSales ON sales (price)";
-			stmt = conn.prepareStatement(index);
-			stmt.execute();
+			
 		} catch (Exception e) {
 			System.err.println("Some error happened adding index!<br/>"
 					+ e.getLocalizedMessage());
@@ -625,12 +620,6 @@ public class AnalyticsHelper {
 			stmt = conn.prepareStatement(index);
 			stmt.execute();
 			index = "DROP INDEX idx_pid_onSales";
-			stmt = conn.prepareStatement(index);
-			stmt.execute();
-			index = "DROP INDEX idx_quantity_onSales";
-			stmt = conn.prepareStatement(index);
-			stmt.execute();
-			index = "DROP INDEX idx_price_onSales";
 			stmt = conn.prepareStatement(index);
 			stmt.execute();
 
