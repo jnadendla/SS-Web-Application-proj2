@@ -1,0 +1,32 @@
+Index #:
+1. "CREATE INDEX idx_name_onUsers ON users (name)" -- This is a beneficial indec because we query the users
+separately from their the sales info.  This means Sales are queried separately by user, so in the WHERE
+we search by the user name.  Because the user name is used frequently and it is not a key, it is beneficial
+to set an index on it.
+
+2. "CREATE INDEX idx_role_onUsers ON users (role)" -- The index on user role is important when we query the
+users because we only pull information from customers.  So we have to filer by the role of the user, and 
+the role attribute is TEXT.  So it's valuable to place and index on role because it is a TEXT attribute only.
+
+3. "CREATE INDEX idx_state_onUsers ON users (state)" -- Although the state attribute is a INTEGER referencing
+and primary key, it does not have the quick look up capability of a key.  And, if we filter by states, we
+query all the states before the sales info.  Then the sales info is queries separately by state, so 
+state is seen in the where clause and an index on it would speed up the query time.
+
+4. "CREATE INDEX idx_name_onCategories ON categories (name)" -- The filter drop down has a category filter, so
+the category name is definately seen in the query where clause.  If no category is choosen, then the index
+would not be beneficial, however because only the user can specify if a category filter is chosen, it is
+beneficial to place an index on the cateogry name.
+
+5. "CREATE INDEX idx_cid_onProducts ON products (cid)" -- cid is an INTEGER referencing an id and is used
+to make sure the product is of the correct category.  This means anytime a product is queried, this must
+be present in the where clause.  Therefore, this is a very beneficial attribute to place an index on.
+
+6. "CREATE INDEX idx_uid_onSales ON sales (uid)" -- uid is also an INTEGER referencing an id and it 
+checks to make sure the sale was made by the proper person.  This means this has to be present when
+we query teh sales, unless the states filter is choosen.  This will be seen often in the where clause of
+the queries, so it is a beneficial index.
+
+7. "CREATE INDEX idx_pid_onSales ON sales (pid)" -- pid is an INTEGER referencing an id and it checks
+to make sure the sale was of the correct product.  Just like uid it is always in the where clause, so
+an index on it is important for speeding up the query time.
