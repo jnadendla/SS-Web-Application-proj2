@@ -16,6 +16,8 @@ public class AnalyticsHelper {
 	private static HttpSession session;
 	private static int rowOffset = 0;
 	private static int colOffset = 0;
+	private static long startTime = 0;
+	private static long timeElapsed = 0;
 
 	public static List<Sales> listSales(HttpServletRequest request,
 			boolean nextCols, boolean nextRows) {
@@ -169,12 +171,16 @@ public class AnalyticsHelper {
 				name = "t.name";
 			}
 
-			System.out.println(query);
+			
 			stmt = conn.prepareStatement(query);
 			if (name.equals("u.name")) {
 				stmt.setString(1, "customer");
 			}
+			startTime = System.nanoTime();
 			rs = stmt.executeQuery();
+			timeElapsed = startTime = System.nanoTime();
+			System.out.println(query + " : " + timeElapsed);
+			
 			// populate list
 			while (rs.next()) {
 				String purchaser = rs.getString("name");
@@ -193,9 +199,13 @@ public class AnalyticsHelper {
 				query = "SELECT " + select + " FROM " + searchFrom
 						+ categoryFrom + filter + "AND " + name + " = '"
 						+ names.get(i) + "' " + orderBy;
-				System.out.println(query);
+				
 				stmt = conn.prepareStatement(query);
+				
+				startTime = System.nanoTime();
 				rs = stmt.executeQuery();
+				timeElapsed = System.nanoTime() - startTime;
+				System.out.println(query + " : " + timeElapsed);
 
 				if (!rs.isBeforeFirst()) {
 					Sales s = new Sales(names.get(i), 0.0, "");
@@ -300,9 +310,14 @@ public class AnalyticsHelper {
 			// stmt = conn.createStatement();
 			String query = "SELECT p.name AS name FROM products AS p"
 					+ categoryFilter + " ORDER BY p.name " + limitCols;
-			System.out.println("Product Query: " + query);
+			
 			stmt = conn.prepareStatement(query);
+			
+			startTime = System.nanoTime();
 			rs = stmt.executeQuery();
+			timeElapsed = System.nanoTime() - startTime;
+			System.out.println("Product Query: " + query + " : " + timeElapsed);
+			
 
 			// populate list
 			while (rs.next()) {
@@ -396,10 +411,15 @@ public class AnalyticsHelper {
 						+ "GROUP BY t.name ORDER BY t.name " + limitRows;
 			}
 
-			System.out.println(query);
+			
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, "customer");
+			
+			startTime = System.nanoTime();
 			order = stmt.executeQuery();
+			timeElapsed = System.nanoTime() - startTime;
+			System.out.println(query + " : " + timeElapsed);
+			
 
 			// populate list
 			while (order.next()) {
@@ -408,7 +428,11 @@ public class AnalyticsHelper {
 			}
 			
 			stmt = conn.prepareStatement(pQuery);
+			
+			startTime = System.nanoTime();
 			order = stmt.executeQuery();
+			timeElapsed = System.nanoTime() - startTime;
+			System.out.println(pQuery + " : " + timeElapsed);
 			
 			while(order.next()) {
 				String purchaser = order.getString("name");
@@ -470,7 +494,11 @@ public class AnalyticsHelper {
 
 				System.out.println(query);
 				stmt = conn.prepareStatement(query);
+				
+				startTime = System.nanoTime();
 				rs = stmt.executeQuery();
+				timeElapsed = System.nanoTime() - startTime;
+				System.out.println(query + " : " + timeElapsed);
 
 				if (!rs.isBeforeFirst()) {
 					Sales s = new Sales(topk.get(i), 0.0, "");
@@ -677,7 +705,11 @@ public class AnalyticsHelper {
 		}
 
 		stmt.setString(1, purchaser);
+		
+		startTime = System.nanoTime();
 		rs = stmt.executeQuery();
+		timeElapsed = System.nanoTime() - startTime;
+		System.out.println(stmt.toString() + " : " + timeElapsed);
 
 		while (rs.next()) {
 			total += rs.getDouble("total");
@@ -703,7 +735,11 @@ public class AnalyticsHelper {
 						+ "FROM sales AS s, products AS p WHERE p.name = ? AND s.pid = p.id");
 
 		stmt.setString(1, product);
+		
+		startTime = System.nanoTime();
 		rs = stmt.executeQuery();
+		timeElapsed = System.nanoTime() - startTime;
+		System.out.println(stmt.toString() + " : " + timeElapsed);
 
 		while (rs.next()) {
 			total += rs.getDouble("total");
