@@ -1,7 +1,7 @@
 {
     "database_name" : "cse135",
     "user_name" : "postgres",
-    "password" : "postgres",
+    "password" : "cse135",
     "chunks" : 10,
     "num_users" : 50000,
     "num_categories" : 2500,

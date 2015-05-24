@@ -1,0 +1,155 @@
+Small DataBase:
+
+Category: All
+Customers.
+Alphabetical.
+SELECT u.name AS name FROM users AS u WHERE u.role = ? GROUP BY u.name ORDER BY u.name LIMIT 20 OFFSET 0 : 868043873018
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND u.name = 'A_user_1006' ORDER BY u.name, p.name : 3339782
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND u.name = 'A_user_1024' ORDER BY u.name, p.name : 1041276
+...
+Product Query: SELECT p.name AS name FROM products AS p ORDER BY p.name LIMIT 10 OFFSET 0 : 1956402
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P149' AND s.pid = p.id : 5941049
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P166' AND s.pid = p.id : 5982529
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P182' AND s.pid = p.id : 6252790
+...
+
+Category: C248
+Customers.
+Alphabetical.
+SELECT u.name AS name FROM users AS u WHERE u.role = ? GROUP BY u.name ORDER BY u.name LIMIT 20 OFFSET 0 : 1191695642803
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 248 AND u.name = 'A_user_1006' ORDER BY u.name, p.name : 3985074
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 248 AND u.name = 'A_user_1024' ORDER BY u.name, p.name : 926244
+...
+Product Query: SELECT p.name AS name FROM products AS p, categories AS c WHERE p.cid = c.id AND c.id = 248 ORDER BY p.name LIMIT 10 OFFSET 0 : 2575609
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'Y_P76' AND s.pid = p.id : 5870918
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u WHERE u.name = 'A_user_1006' AND s.uid = u.id : 5396249
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u WHERE u.name = 'A_user_1024' AND s.uid = u.id : 5531380
+...
+
+Category: All
+Customers.
+Topk.
+SELECT u.name AS name FROM sales AS s, users AS u WHERE u.id = s.uid AND u.role = ? GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC LIMIT 20 OFFSET 0 : 21076119
+SELECT u.name AS name FROM users AS u WHERE u.role = 'customer' GROUP BY u.name ORDER BY u.name  LIMIT 20 OFFSET 0 : 575588
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid  AND u.name = 'M_user_993' ORDER BY p.name
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid  AND u.name = 'M_user_993' ORDER BY p.name : 5011811
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid  AND u.name = 'A_user_2943' ORDER BY p.name
+...
+Product Query: SELECT p.name AS name FROM products AS p ORDER BY p.name LIMIT 10 OFFSET 0 : 1970087
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P149' AND s.pid = p.id : 5761445
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P166' AND s.pid = p.id : 5868352
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P182' AND s.pid = p.id : 5845687
+...
+
+Category: C248
+States.
+Topk.
+SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = ? AND s.pid = p.id AND p.cid = c.id AND c.id = '248' GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC LIMIT 20 OFFSET 0 : 7414658
+SELECT t.name AS name FROM states AS t GROUP BY t.name ORDER BY t.name  LIMIT 20 OFFSET 0 : 362201
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, states AS t, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 248  AND t.name = 'Louisiana' ORDER BY p.name
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, states AS t, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 248  AND t.name = 'Louisiana' ORDER BY p.name : 6636374
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, states AS t, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 248  AND t.name = 'South Dakota' ORDER BY p.name
+...
+Product Query: SELECT p.name AS name FROM products AS p, categories AS c WHERE p.cid = c.id AND c.id = 248 ORDER BY p.name LIMIT 10 OFFSET 0 : 2545247
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'Y_P76' AND s.pid = p.id : 5771280
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Louisiana' AND st.id = u.state AND s.uid = u.id : 7261567
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'South Dakota' AND st.id = u.state AND s.uid = u.id : 7216666
+...
+
+Category: All
+States.
+Alphabetical.
+SELECT t.name AS name FROM states AS t GROUP BY t.name ORDER BY t.name LIMIT 20 OFFSET 0 : 1504058116055
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND t.name = 'Alabama' ORDER BY t.name, p.name : 5743057
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND t.name = 'Alaska' ORDER BY t.name, p.name : 1570253
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND t.name = 'Arizona' ORDER BY t.name, p.name : 1391932
+...
+Product Query: SELECT p.name AS name FROM products AS p ORDER BY p.name LIMIT 10 OFFSET 0 : 2085118
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P149' AND s.pid = p.id : 5643846
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P166' AND s.pid = p.id : 6052233
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P182' AND s.pid = p.id : 6388348
+...
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Alabama' AND st.id = u.state AND s.uid = u.id : 7058871
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Alaska' AND st.id = u.state AND s.uid = u.id : 7006272
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Arizona' AND st.id = u.state AND s.uid = u.id : 6848477
+...
+
+Medium Database:
+
+Category: All
+Customer.
+Alphabetical.
+SELECT u.name AS name FROM users AS u WHERE u.role = ? GROUP BY u.name ORDER BY u.name LIMIT 20 OFFSET 0 : 1658553280854
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND u.name = 'A_user_10011' ORDER BY u.name, p.name : 4338723
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND u.name = 'A_user_10025' ORDER BY u.name, p.name : 2217256
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND u.name = 'A_user_10032' ORDER BY u.name, p.name : 2144559
+...
+Product Query: SELECT p.name AS name FROM products AS p ORDER BY p.name LIMIT 10 OFFSET 0 : 4018001
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1101' AND s.pid = p.id : 34139756
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1105' AND s.pid = p.id : 32772627
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1173' AND s.pid = p.id : 33758738
+...
+
+Category: C2388
+Customer.
+Alphabetical.
+SELECT u.name AS name FROM users AS u WHERE u.role = ? GROUP BY u.name ORDER BY u.name LIMIT 20 OFFSET 0 : 1737054792095
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 2388 AND u.name = 'A_user_10011' ORDER BY u.name, p.name : 5427466
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 2388 AND u.name = 'A_user_10025' ORDER BY u.name, p.name : 2417814
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 2388 AND u.name = 'A_user_10032' ORDER BY u.name, p.name : 2322453
+...
+Product Query: SELECT p.name AS name FROM products AS p, categories AS c WHERE p.cid = c.id AND c.id = 2388 ORDER BY p.name LIMIT 10 OFFSET 0 : 3161889
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'S_P3148' AND s.pid = p.id : 34023014
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'X_P3887' AND s.pid = p.id : 33185716
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u WHERE u.name = 'A_user_10011' AND s.uid = u.id : 30808099
+...
+
+Category: All
+Customer.
+Topk.
+SELECT u.name AS name FROM sales AS s, users AS u WHERE u.id = s.uid AND u.role = ? GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC LIMIT 20 OFFSET 0 : 2081869132
+SELECT u.name AS name FROM users AS u WHERE u.role = 'customer' GROUP BY u.name ORDER BY u.name  LIMIT 20 OFFSET 0 : 566608
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid  AND u.name = 'B_user_11697' ORDER BY p.name
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid  AND u.name = 'B_user_11697' ORDER BY p.name : 6542295
+SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE u.id = s.uid AND u.role = 'customer' AND p.id = s.pid  AND u.name = 'L_user_26107' ORDER BY p.name
+...
+Product Query: SELECT p.name AS name FROM products AS p ORDER BY p.name LIMIT 10 OFFSET 0 : 3789648
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1101' AND s.pid = p.id : 33431174
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1105' AND s.pid = p.id : 33182295
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1173' AND s.pid = p.id : 33630877
+...
+
+Category: C2388
+States.
+Topk.
+SELECT t.name AS name FROM sales AS s, users AS u, states AS t, products AS p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = ? AND s.pid = p.id AND p.cid = c.id AND c.id = '2388' GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC LIMIT 20 OFFSET 0 : 8781788
+SELECT t.name AS name FROM states AS t GROUP BY t.name ORDER BY t.name  LIMIT 20 OFFSET 0 : 424208
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, states AS t, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 2388  AND t.name = 'Maine' ORDER BY p.name
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, states AS t, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 2388  AND t.name = 'Maine' ORDER BY p.name : 8259225
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM sales AS s, users AS u, states AS t, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p, categories AS c WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND p.cid = c.id AND c.id = 2388  AND t.name = 'Nebraska' ORDER BY p.name
+...
+Product Query: SELECT p.name AS name FROM products AS p, categories AS c WHERE p.cid = c.id AND c.id = 2388 ORDER BY p.name LIMIT 10 OFFSET 0 : 3220046
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'S_P3148' AND s.pid = p.id : 33890876
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'X_P3887' AND s.pid = p.id : 33541931
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Maine' AND st.id = u.state AND s.uid = u.id : 44528573
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Nebraska' AND st.id = u.state AND s.uid = u.id : 43633973
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Wyoming' AND st.id = u.state AND s.uid = u.id : 44543968
+...
+
+Category: All
+States.
+Alphabetical.
+SELECT t.name AS name FROM states AS t GROUP BY t.name ORDER BY t.name LIMIT 20 OFFSET 0 : 1966873735715
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND t.name = 'Alabama' ORDER BY t.name, p.name : 20311947
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND t.name = 'Alaska' ORDER BY t.name, p.name : 9743526
+SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product FROM users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name LIMIT 10 OFFSET 0) p WHERE t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid AND t.name = 'Arizona' ORDER BY t.name, p.name : 8321659
+...
+Product Query: SELECT p.name AS name FROM products AS p ORDER BY p.name LIMIT 10 OFFSET 0 : 3824713
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1101' AND s.pid = p.id : 35463695
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1105' AND s.pid = p.id : 33640285
+SELECT (s.price * s.quantity) AS total FROM sales AS s, products AS p WHERE p.name = 'A_P1173' AND s.pid = p.id : 33748476
+...
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Alabama' AND st.id = u.state AND s.uid = u.id : 43684006
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Alaska' AND st.id = u.state AND s.uid = u.id : 44024827
+SELECT (s.price * s.quantity) AS total FROM sales AS s, users AS u, states AS st WHERE st.name = 'Arizona' AND st.id = u.state AND s.uid = u.id : 43413745
+...
