@@ -3,19 +3,17 @@
 <%@page import="java.util.List" import="java.util.Iterator"
 	import="helpers.*"%>
 <%
-	boolean nextRows = false;
 	boolean nextCols = false;
+	boolean runQ = false;
 	String colClick = request.getParameter("cols");
-	String rowClick = request.getParameter("rows");
-	if (colClick != null && colClick.equals("Next 10")) {
-		System.out.println("clicked next 10");
+	String runClick = request.getParameter("runQ");
+	if (colClick != null && colClick.equals("Next 50")) {
 		nextCols = true;
-	} else if (rowClick != null && rowClick.equals("Next 20")) {
-		nextRows = true;
+	} else if(runClick != null && runClick.equals("Run Query")) {
+		runQ = true;
 	}
 
-	List<Sales> sales = AnalyticsHelper.listSales(request, nextCols,
-			nextRows);
+	List<Sales> sales = AnalyticsHelper.listSales(request, runQ, nextCols);
 	List<String> products = AnalyticsHelper
 			.listProductsAlphabetically();
 	if (!sales.isEmpty() && !products.isEmpty()) {
@@ -42,7 +40,7 @@
 			%>
 			<td>
 				<form action="">
-					<input type="submit" value="Next 10" name="cols"
+					<input type="submit" value="Next 50" name="cols"
 						<%if (numCols < 10) {%> disabled <%}%>>
 				</form>
 			</td>
@@ -111,14 +109,6 @@
 					}
 				}
 		%>
-		<tr>
-			<td>
-				<form action="">
-					<input type="submit" value="Next 20" name="rows"
-						<%if (numRows < 20) {%> disabled <%}%>>
-				</form>
-			</td>
-		</tr>
 	</thead>
 </table>
 <%

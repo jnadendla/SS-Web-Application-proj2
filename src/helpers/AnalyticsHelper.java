@@ -14,48 +14,33 @@ import javax.servlet.http.HttpSession;
 public class AnalyticsHelper {
 
 	private static HttpSession session;
-	private static int rowOffset = 0;
 	private static int colOffset = 0;
 	private static long startTime = 0;
 	private static long timeElapsed = 0;
 
-	public static List<Sales> listSales(HttpServletRequest request,
-			boolean nextCols, boolean nextRows) {
+	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
+			boolean nextCols) {
 		List<Sales> sales = new ArrayList<Sales>();
-		List<String> names = new ArrayList<String>();
 		ResultSet rs;
 		Connection conn = null;
 		PreparedStatement stmt = null;
-		String select = "";
-		String searchFrom = "", categoryFrom = "";
+		String categoryFrom = "";
 		String categoryFilter = "", additionalFilter = "", category = "";
-		String orderBy = "";
-
-		// When next button is clicked, increment the offsets
-		if (nextCols)
-			colOffset += 10;
-		else if (nextRows)
-			rowOffset += 20;
-		else {
-			// New data means we start at offset 0
-			rowOffset = 0;
-			colOffset = 0;
-		}
-
-		String limitRows = "LIMIT 20 OFFSET " + rowOffset;
-		String limitCols = " LIMIT 10 OFFSET " + colOffset;
+		boolean refresh = false;
 
 		// If the RUN QUERY button has been pressed this should capture the new
 		// filter option it has selected, but if nothing new has been selected,
 		// we use the previous filter data.
 		session = request.getSession();
-		String d = request.getParameter("displayFilter");
 		String c = request.getParameter("categoryFilter");
-		String o = request.getParameter("sortFilter");
-		if (d != null && !d.equals("") && o != null && !o.equals("")) {
-			session.setAttribute("displayFilter", d);
-			session.setAttribute("categoryFilter", c);
-			session.setAttribute("sortFilter", o);
+		session.setAttribute("categoryFilter", c);
+		
+		// When next button is clicked, increment the offsets
+		if (nextCols)
+			colOffset += 50;
+		else if(runQuery) {
+			// New data means we start at offset 0
+			colOffset = 0;
 		}
 
 		addIndeciesToTables();
@@ -84,27 +69,8 @@ public class AnalyticsHelper {
 		// If we filter by states there is an additional table to query from
 		// (states).
 		// be placed in the WHERE clause of the query.
-		String display = "";
-		try {
-			display = (String) session.getAttribute("displayFilter");
-			if (display == null || display.equals("")) {
-				dropIndeciesOnTables();
-				return sales;
-			}
-			if (display.equals("customers") || display.equals("")) {
-				select = "u.name AS name, (s.price * s.quantity) AS total, p.name AS product";
-				searchFrom = "users AS u, sales AS s, (SELECT * FROM products AS n ORDER BY n.name"
-						+ limitCols + ") p";
-				additionalFilter = "u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
-
-			} else if (display.equals("states")) {
-				select = "t.name AS name, (s.price * s.quantity) AS total, p.name AS product";
-				searchFrom = "users AS u, states t, sales AS s, (SELECT * FROM products AS n ORDER BY n.name"
-						+ limitCols + ") p";
-				additionalFilter = "t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
-			}
-		} catch (Exception e) {
-		}
+		additionalFilter = "t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
+		
 
 		// This simply combines the filter string with a category to filter
 		// by if one exists.
@@ -114,167 +80,9 @@ public class AnalyticsHelper {
 		// of the query. Based on if the sort is alphabetical, we then sort by
 		// the name and product of the users/states. If the sort is topk, then
 		// we call a helper method to build the rest of the sales list.
-		try {
-			String order = (String) session.getAttribute("sortFilter");
-			if (order != null && !order.isEmpty())
-				if (order.equals("alphabetical") || order.equals("")) {
-					if (display.equals("customers")) {
-						orderBy = "ORDER BY u.name, p.name";
-					} else if (display.equals("states"))
-						orderBy = "ORDER BY t.name, p.name";
-				} else if (order.equals("topk")) {
-					// User helper method to build list and then return
-					// immediately
-					sales = listByTopK(display, categoryFrom, category, filter);// ////TOPK
-																				// ORDER
-																				// HAPPENS
-																				// IN
-																				// A
-																				// SEPARATE
-																				// FUNCIONT
-																				// CALLED
-																				// HERE
-					dropIndeciesOnTables();
-					return sales;
-				}
-		} catch (Exception e) {
-		}
-
-		try {
-			try {
-				// acquire connection
-				conn = HelperUtils.connect();
-			} catch (Exception e) {
-				System.err
-						.println("Internal Server Error. This shouldn't happen.");
-				dropIndeciesOnTables();
-				return sales;
-			}
-			// stmt = conn.createStatement();
-
-			// Get the aplphabetical ordering or users/states, if you want to
-			// LIMIT and
-			// OFFSET the number of users, here is where you do that
-			// ///////////QUERY NAME ORDERING////////////////////////////
-			String query = "";
-			String name = "";
-			if (display.equals("customers") || display.equals("")) {
-				// NOTE - current limit seems to be applied to the number of
-				// sales
-				query = "SELECT u.name AS name FROM users AS u" + " WHERE "
-						+ "u.role = ? " + "GROUP BY u.name ORDER BY u.name "
-						+ limitRows;
-				name = "u.name";
-			} else if (display.equals("states")) {
-				query = "SELECT t.name AS name FROM states AS t "
-						+ "GROUP BY t.name ORDER BY t.name " + limitRows;
-				name = "t.name";
-			}
-
-			
-			stmt = conn.prepareStatement(query);
-			if (name.equals("u.name")) {
-				stmt.setString(1, "customer");
-			}
-			startTime = System.nanoTime();
-			rs = stmt.executeQuery();
-			timeElapsed = startTime = System.nanoTime();
-			System.out.println(query + " : " + timeElapsed);
-			
-			// populate list
-			while (rs.next()) {
-				String purchaser = rs.getString("name");
-				names.add(purchaser);
-			}
-
-			// /////////////////////////////////////////////////////
-			// ////////SEPARATE QUERY//////////////////////////////
-			// For each user/state we get the products they have bought
-			for (int i = 0; i < names.size(); ++i) {
-
-				// create the entire query string based of the strings we have
-				// created individually
-				// If you want to LIMIT and OFFSET the number of products, here
-				// is where you do that
-				query = "SELECT " + select + " FROM " + searchFrom
-						+ categoryFrom + filter + "AND " + name + " = '"
-						+ names.get(i) + "' " + orderBy;
-				
-				stmt = conn.prepareStatement(query);
-				
-				startTime = System.nanoTime();
-				rs = stmt.executeQuery();
-				timeElapsed = System.nanoTime() - startTime;
-				System.out.println(query + " : " + timeElapsed);
-
-				if (!rs.isBeforeFirst()) {
-					Sales s = new Sales(names.get(i), 0.0, "");
-					sales.add(s);
-					continue;
-				}
-
-				// populate list (we cannot return a ResultSet because it's bad
-				// programming).
-				// Simply fill our list with sales by looping through the result
-				// set and getting
-				// the information to build sales.
-				boolean everyOther = false;
-				Sales temp = null;
-				while (rs.next()) {
-					String user = rs.getString("name");
-					double price = rs.getDouble("total");
-					String product = rs.getString("product");
-
-					// The everyOther aspect is designed so have the sales from
-					// the previous loop index
-					// and we can check if the current sale is mad by the same
-					// user and of the same
-					// product. If so, we just mold these sales into 1 sale.
-					// This is neccessary
-					// because users can purchase items multiple times but at
-					// different instances, so
-					// the database will contain multiple sales of the same
-					// product.
-					if (everyOther) {
-						if (temp.getPurchaser().equals(user)
-								&& temp.getProduct().equals(product)) {
-							String tempUser = temp.getPurchaser();
-							double tempPrice = temp.getPrice() + price;
-							String tempProduct = temp.getProduct();
-							temp = new Sales(tempUser, tempPrice, tempProduct);
-							if (rs.isLast())// make sure to add item it is the
-											// last one
-								sales.add(temp);
-						} else {
-							sales.add(temp);
-							temp = new Sales(user, price, product);
-							if (rs.isLast())
-								sales.add(temp);
-						}
-					} else {
-						everyOther = true;
-						temp = new Sales(user, price, product);
-						if (rs.isLast())// make sure to add last item
-							sales.add(temp);
-					}
-				}
-			}
-
-			dropIndeciesOnTables();
-			return sales;
-		} catch (Exception e) {
-			System.err.println("Some error happened!<br/>"
-					+ e.getLocalizedMessage());
-			dropIndeciesOnTables();
-			return sales;
-		} finally {
-			try {
-				stmt.close();
-				conn.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
+		sales = listByTopK(categoryFrom, category, filter);// ////TOPK		// HERE
+		dropIndeciesOnTables();
+		return sales;
 	}
 
 	public static List<String> listProductsAlphabetically() {
@@ -283,7 +91,7 @@ public class AnalyticsHelper {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		String categoryFilter = "";
-		String limitCols = "LIMIT 10 OFFSET " + colOffset;
+		String limitCols = "LIMIT 50 OFFSET " + colOffset;
 
 		try {
 			String category = (String) session.getAttribute("categoryFilter");
@@ -347,15 +155,14 @@ public class AnalyticsHelper {
 	 * appear in a topk approach, and another to get all the sales based on that
 	 * ordering.
 	 */
-	private static List<Sales> listByTopK(String display, String categoryFrom,
+	private static List<Sales> listByTopK(String categoryFrom,
 			String category, String filter) {
 		List<Sales> sales = new ArrayList<Sales>();
 		List<String> topk = new ArrayList<String>();
 		ResultSet rs, order;
 		Connection conn = null;
 		PreparedStatement stmt = null;
-		String limitRows = " LIMIT 20 OFFSET " + rowOffset;
-		String limitCols = " LIMIT 10 OFFSET " + colOffset;
+		String limitCols = " LIMIT 50 OFFSET " + colOffset;
 		String products;
 		
 		List<String> purchasers = new ArrayList<String>();
@@ -384,33 +191,17 @@ public class AnalyticsHelper {
 
 			String pQuery = "";
 			
-			// Get the topk ordering or users/states
-			if (display.equals("customers") || display.equals("")){
-				query = "SELECT u.name AS name FROM sales AS s, users AS u"
-						+ productsFrom
-						+ categoryFrom
-						+ " WHERE u.id = s.uid AND u.role = ? "
-						+ categoryFilter
-						+ "GROUP BY u.name ORDER BY SUM(s.price * s.quantity) DESC"
-						+ limitRows;
-				
-				pQuery = "SELECT u.name AS name FROM users AS u" + " WHERE "
-						+ "u.role = 'customer' " + "GROUP BY u.name ORDER BY u.name "
-						+ limitRows;
-			}
-			else if (display.equals("states")) {
-				query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t"
-						+ productsFrom
-						+ categoryFrom
-						+ " WHERE t.id = u.state AND u.id = s.uid AND u.role = ? "
-						+ categoryFilter
-						+ "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC"
-						+ limitRows;
-				
-				pQuery = "SELECT t.name AS name FROM states AS t "
-						+ "GROUP BY t.name ORDER BY t.name " + limitRows;
-			}
-
+			// Get the topk ordering or states
+			query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t"
+					+ productsFrom
+					+ categoryFrom
+					+ " WHERE t.id = u.state AND u.id = s.uid AND u.role = ? "
+					+ categoryFilter
+					+ "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC";
+		
+			pQuery = "SELECT t.name AS name FROM states AS t "
+					+ "GROUP BY t.name ORDER BY t.name ";
+			
 			
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, "customer");
@@ -467,30 +258,16 @@ public class AnalyticsHelper {
 			for (int i = 0; i < topk.size(); ++i) {
 				String name = topk.get(i);
 
-				String nameFilter = "";
-				if (display.equals("customers") || display.equals(""))
-					nameFilter = " AND u.name = '" + name + "'";
-				else if (display.equals("states"))
-					nameFilter = " AND t.name = '" + name + "'";
+				String nameFilter = " AND t.name = '" + name + "'";
 
 				String query = "";
-				if (display.equals("customers") || display.equals("")) {
-					query = "SELECT u.name AS name, (s.price * s.quantity) AS total, p.name AS product "
-							+ "FROM sales AS s, users AS u"
-							+ products
-							+ categoryFrom
-							+ filter
-							+ nameFilter
-							+ " ORDER BY p.name";
-				} else if (display.equals("states")) {
-					query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product "
-							+ "FROM sales AS s, users AS u, states AS t"
-							+ products
-							+ categoryFrom
-							+ filter
-							+ nameFilter
-							+ " ORDER BY p.name";
-				}
+				query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product "
+						+ "FROM sales AS s, users AS u, states AS t"
+						+ products
+						+ categoryFrom
+						+ filter
+						+ nameFilter
+						+ " ORDER BY p.name";
 
 				System.out.println(query);
 				stmt = conn.prepareStatement(query);
@@ -750,4 +527,5 @@ public class AnalyticsHelper {
 
 		return total;
 	}
+	
 }

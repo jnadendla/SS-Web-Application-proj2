@@ -3,11 +3,8 @@
 boolean nextRows = false;
 boolean nextCols = false;
 String colClick = request.getParameter("cols");
-String rowClick = request.getParameter("rows");
 if(colClick != null && colClick.equals("Next 10")) {
    nextCols = true;
-} else if(rowClick != null && rowClick.equals("Next 20")) {
-   nextRows = true;
 }
 
 String displayFilter = request.getParameter("displayFilter");
@@ -56,7 +53,7 @@ if(categoryFilter == null) {
 							<option value="alphabetical" <% if(sortFilter.equals("alphabetical")) { %> selected<%} %>>Alphabetical</option>
 							<option value="topk" <% if(sortFilter.equals("topk")) { %> selected<%} %>>Top-K</option>
 					</select></li> <br>
-					<li><input type="submit" value="Run Query" <%if(nextCols || nextRows) {%>disabled<%} %>></li>
+					<li><input type="submit" value="Run Query" name="runQ" <%if(nextCols || nextRows) {%>disabled<%} %>></li>
 				</form>
 
 			</ul>
