@@ -110,6 +110,7 @@ INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Xbox 360',          '405
 INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Nintendo Wii U ',    '407033',  430);
 INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Nintendo Wii',      '408076',   232);
 
+
 -- should be removed for project 2.
 CREATE TABLE cart_history (
     id          SERIAL PRIMARY KEY,
@@ -135,8 +136,7 @@ CREATE TABLE ordered (
 CREATE FUNCTION orderfunc() RETURNS TRIGGER AS $order_table$
     BEGIN
 	INSERT INTO ordered(state, product, price) VALUES
-	(SELECT s.id AS state, NEW.ID as product, 0 AS price
-	FROM states AS s)
+	((SELECT s.id AS state FROM states AS s), NEW.ID, 0);
         RETURN NEW;
     END;
 $order_table$ LANGUAGE plpgsql;
@@ -150,8 +150,9 @@ EXECUTE PROCEDURE orderfunc();
 CREATE FUNCTION salesfunc() RETURNS TRIGGER AS $orderS_table$
     BEGIN
 	INSERT INTO ordered(state, product, price) VALUES
-	(SELECT s.id AS state, p.id as product, (sa.price * sa.quantity) AS price
-	FROM states AS s, products AS p, sales AS sa WHERE sa.id = NEW.ID sa.pid = p.id)
+	((SELECT s.id AS state 
+	FROM states AS s, products AS p, sales AS sa 
+	WHERE sa.id = NEW.ID AND sa.pid = p.id), p.id, (sa.price * sa.quantity));
         RETURN NEW;
     END;
 $orderS_table$ LANGUAGE plpgsql;
@@ -168,65 +169,65 @@ CREATE TABLE totals (
     total       INTEGER NOT NULL
 );
 
-INSERT INTO totals (state, total) VALUES ('Alabama', 0.0);
-INSERT INTO totals (state, total) VALUES ('Alaska', 0.0);
-INSERT INTO totals (state, total) VALUES ('Arizona', 0.0);
-INSERT INTO totals (state, total) VALUES ('Arkansas', 0.0);
-INSERT INTO totals (state, total) VALUES ('California', 0.0);
-INSERT INTO totals (state, total) VALUES ('Colorado', 0.0);
-INSERT INTO totals (state, total) VALUES ('Connecticut', 0.0);
-INSERT INTO totals (state, total) VALUES ('Delaware', 0.0);
-INSERT INTO totals (state, total) VALUES ('Florida', 0.0);
-INSERT INTO totals (state, total) VALUES ('Georgia', 0.0);
-INSERT INTO totals (state, total) VALUES ('Hawaii', 0.0);
-INSERT INTO totals (state, total) VALUES ('Idaho', 0.0);
-INSERT INTO totals (state, total) VALUES ('Illinois', 0.0);
-INSERT INTO totals (state, total) VALUES ('Indiana', 0.0);
-INSERT INTO totals (state, total) VALUES ('Iowa', 0.0);
-INSERT INTO totals (state, total) VALUES ('Kansas', 0.0);
-INSERT INTO totals (state, total) VALUES ('Kentucky', 0.0);
-INSERT INTO totals (state, total) VALUES ('Louisiana', 0.0);
-INSERT INTO totals (state, total) VALUES ('Maine', 0.0);
-INSERT INTO totals (state, total) VALUES ('Maryland', 0.0);
-INSERT INTO totals (state, total) VALUES ('Massachusetts', 0.0);
-INSERT INTO totals (state, total) VALUES ('Michigan', 0.0);
-INSERT INTO totals (state, total) VALUES ('Minnesota', 0.0);
-INSERT INTO totals (state, total) VALUES ('Mississippi', 0.0);
-INSERT INTO totals (state, total) VALUES ('Missouri', 0.0);
-INSERT INTO totals (state, total) VALUES ('Montana', 0.0);
-INSERT INTO totals (state, total) VALUES ('Nebraska', 0.0);
-INSERT INTO totals (state, total) VALUES ('Nevada', 0.0);
-INSERT INTO totals (state, total) VALUES ('New Hampshire', 0.0);
-INSERT INTO totals (state, total) VALUES ('New Jersey', 0.0);
-INSERT INTO totals (state, total) VALUES ('New Mexico', 0.0);
-INSERT INTO totals (state, total) VALUES ('New York', 0.0);
-INSERT INTO totals (state, total) VALUES ('North Carolina', 0.0);
-INSERT INTO totals (state, total) VALUES ('North Dakota', 0.0);
-INSERT INTO totals (state, total) VALUES ('Ohio', 0.0);
-INSERT INTO totals (state, total) VALUES ('Oklahoma', 0.0);
-INSERT INTO totals (state, total) VALUES ('Oregon', 0.0);
-INSERT INTO totals (state, total) VALUES ('Pennsylvania', 0.0);
-INSERT INTO totals (state, total) VALUES ('Rhode Island', 0.0);
-INSERT INTO totals (state, total) VALUES ('South Carolina', 0.0);
-INSERT INTO totals (state, total) VALUES ('South Dakota', 0.0);
-INSERT INTO totals (state, total) VALUES ('Tennessee', 0.0);
-INSERT INTO totals (state, total) VALUES ('Texas', 0.0);
-INSERT INTO totals (state, total) VALUES ('Utah', 0.0);
-INSERT INTO totals (state, total) VALUES ('Vermont', 0.0);
-INSERT INTO totals (state, total) VALUES ('Virginia', 0.0);
-INSERT INTO totals (state, total) VALUES ('Washington', 0.0);
-INSERT INTO totals (state, total) VALUES ('West Virginia', 0.0);
-INSERT INTO totals (state, total) VALUES ('Wisconsin', 0.0);
-INSERT INTO totals (state, total) VALUES ('Wyoming', 0.0);
+INSERT INTO totals (state, total) VALUES (1, 0.0);
+INSERT INTO totals (state, total) VALUES (2, 0.0);
+INSERT INTO totals (state, total) VALUES (3, 0.0);
+INSERT INTO totals (state, total) VALUES (4, 0.0);
+INSERT INTO totals (state, total) VALUES (5, 0.0);
+INSERT INTO totals (state, total) VALUES (6, 0.0);
+INSERT INTO totals (state, total) VALUES (7, 0.0);
+INSERT INTO totals (state, total) VALUES (8, 0.0);
+INSERT INTO totals (state, total) VALUES (9, 0.0);
+INSERT INTO totals (state, total) VALUES (10, 0.0);
+INSERT INTO totals (state, total) VALUES (11, 0.0);
+INSERT INTO totals (state, total) VALUES (12, 0.0);
+INSERT INTO totals (state, total) VALUES (13, 0.0);
+INSERT INTO totals (state, total) VALUES (14, 0.0);
+INSERT INTO totals (state, total) VALUES (15, 0.0);
+INSERT INTO totals (state, total) VALUES (16, 0.0);
+INSERT INTO totals (state, total) VALUES (17, 0.0);
+INSERT INTO totals (state, total) VALUES (18, 0.0);
+INSERT INTO totals (state, total) VALUES (19, 0.0);
+INSERT INTO totals (state, total) VALUES (20, 0.0);
+INSERT INTO totals (state, total) VALUES (21, 0.0);
+INSERT INTO totals (state, total) VALUES (22, 0.0);
+INSERT INTO totals (state, total) VALUES (23, 0.0);
+INSERT INTO totals (state, total) VALUES (24, 0.0);
+INSERT INTO totals (state, total) VALUES (25, 0.0);
+INSERT INTO totals (state, total) VALUES (26, 0.0);
+INSERT INTO totals (state, total) VALUES (27, 0.0);
+INSERT INTO totals (state, total) VALUES (28, 0.0);
+INSERT INTO totals (state, total) VALUES (29, 0.0);
+INSERT INTO totals (state, total) VALUES (30, 0.0);
+INSERT INTO totals (state, total) VALUES (31, 0.0);
+INSERT INTO totals (state, total) VALUES (32, 0.0);
+INSERT INTO totals (state, total) VALUES (33, 0.0);
+INSERT INTO totals (state, total) VALUES (34, 0.0);
+INSERT INTO totals (state, total) VALUES (35, 0.0);
+INSERT INTO totals (state, total) VALUES (36, 0.0);
+INSERT INTO totals (state, total) VALUES (37, 0.0);
+INSERT INTO totals (state, total) VALUES (38, 0.0);
+INSERT INTO totals (state, total) VALUES (39, 0.0);
+INSERT INTO totals (state, total) VALUES (40, 0.0);
+INSERT INTO totals (state, total) VALUES (41, 0.0);
+INSERT INTO totals (state, total) VALUES (42, 0.0);
+INSERT INTO totals (state, total) VALUES (43, 0.0);
+INSERT INTO totals (state, total) VALUES (44, 0.0);
+INSERT INTO totals (state, total) VALUES (45, 0.0);
+INSERT INTO totals (state, total) VALUES (46, 0.0);
+INSERT INTO totals (state, total) VALUES (47, 0.0);
+INSERT INTO totals (state, total) VALUES (48, 0.0);
+INSERT INTO totals (state, total) VALUES (49, 0.0);
+INSERT INTO totals (state, total) VALUES (50, 0.0);
 
 CREATE FUNCTION totalsfunc() RETURNS TRIGGER AS $totals_table$
     BEGIN
 	UPDATE totals
-        SET total = 
-            (SELECT SUM(o.price) FROM ordered AS o, totals AS t, 
+        SET t.total = 
+            (SELECT SUM(o.price) FROM ordered AS o, totals AS t 
              WHERE o.state = t.state)
 	FROM ordered AS o, totals AS t
-	WHERE o.state = t.state
+	WHERE o.state = t.state;
         RETURN NEW;
     END;
 $totals_table$ LANGUAGE plpgsql;
