@@ -39,6 +39,7 @@ public class PurchaseHelper {
             cart.empty();
             return HelperUtils.printSuccess("Purchase successful!");
         } catch (SQLException e) {
+            e.printStackTrace();
             return HelperUtils.printError("Oops! Looks like the product you want to buy is no longer available...");
         } finally {
             try {

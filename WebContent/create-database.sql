@@ -4,6 +4,11 @@ DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS sales CASCADE;
 DROP TABLE IF EXISTS states CASCADE;
 DROP TABLE IF EXISTS cart_history CASCADE;
+DROP TABLE IF EXISTS ordered CASCADE;
+DROP TABLE IF EXISTS totals CASCADE;
+DROP FUNCTION IF EXISTS orderfunc() CASCADE;
+DROP FUNCTION IF EXISTS salesfunc() CASCADE;
+DROP FUNCTION IF EXISTS totalsfunc() CASCADE;
 
 /**table 0: [entity] states**/
 CREATE TABLE states (
@@ -128,26 +133,38 @@ CREATE TABLE sales (
 
 CREATE TABLE ordered (
     id          SERIAL PRIMARY KEY,
-    state       INTEGER REFERENCES states (id) NOT NULL,
+    uid       INTEGER REFERENCES states (id) NOT NULL,
     product     INTEGER REFERENCES products (id) NOT NULL,
     price       INTEGER NOT NULL
 );
 
-CREATE TRIGGER trg_products
-    AFTER INSERT
-    ON products
-    REFERENCING NEW ROW as New 
-    FOR EACH ROW
-INSERT INTO ordered(state, product, price) VALUES
-	((SELECT s.id AS state FROM states AS s), New.id, 0);
+--CREATE FUNCTION orderfunc() RETURNS TRIGGER AS $order_table$
+--    BEGIN
+--	INSERT INTO ordered(uid, product, price) VALUES
+--	((SELECT u.id AS uid FROM states AS s), NEW.ID, 0);
+--        RETURN NEW;
+--    END;
+--$order_table$ LANGUAGE plpgsql;
+
+--CREATE TRIGGER trg_products
+--    AFTER INSERT OR UPDATE
+--    ON products  
+--    FOR EACH ROW
+--EXECUTE PROCEDURE orderfunc();
+
+CREATE FUNCTION salesfunc() RETURNS TRIGGER AS $orderS_table$
+    BEGIN
+	INSERT INTO ordered(uid, product, price) VALUES
+	(NEW.uid, NEW.pid, (NEW.price * NEW.quantity));
+        RETURN NEW;
+    END;
+$orderS_table$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_sales
-    AFTER INSERT
+    BEFORE INSERT OR UPDATE
     ON sales
-    REFERENCING NEW ROW as New 
     FOR EACH ROW
-INSERT INTO ordered(state, product, price)
-VALUES (New.state, New.pid, (New.price * New.quantity));
+EXECUTE PROCEDURE salesfunc();
 
 CREATE TABLE totals (
     id          SERIAL PRIMARY KEY,
@@ -206,14 +223,20 @@ INSERT INTO totals (state, total) VALUES (48, 0.0);
 INSERT INTO totals (state, total) VALUES (49, 0.0);
 INSERT INTO totals (state, total) VALUES (50, 0.0);
 
+CREATE FUNCTION totalsfunc() RETURNS TRIGGER AS $totals_table$
+    BEGIN
+	UPDATE totals
+        SET total = 
+            (SELECT SUM(o.price) FROM ordered AS o, users AS u, totals AS t 
+             WHERE o.uid = u.id AND u.state = t.state)
+	FROM users AS u, totals AS t
+	WHERE NEW.uid = u.id AND u.state = t.state;
+        RETURN NEW;
+    END;
+$totals_table$ LANGUAGE plpgsql;
+
 CREATE TRIGGER trg_totals
     AFTER INSERT
     ON ordered
     FOR EACH ROW
-    REFERENCING NEW ROW as New 
-UPDATE totals
-        SET t.total = 
-            (SELECT SUM(o.price) FROM ordered AS o, totals AS t 
-             WHERE o.state = t.state)
-	FROM ordered AS o, totals AS t
-	WHERE o.state = t.state;
+EXECUTE PROCEDURE totalsfunc();
