@@ -227,8 +227,8 @@ CREATE FUNCTION totalsfunc() RETURNS TRIGGER AS $totals_table$
     BEGIN
 	UPDATE totals
         SET total = 
-            (SELECT SUM(o.price) FROM ordered AS o,totals AS t 
-             WHERE NEW.id = o.id AND t.state = (SELECT t.state FROM totals AS t, users as u 
+            (SELECT SUM(o.price) FROM ordered AS o,totals AS t, users AS u 
+             WHERE o.uid = u.id AND u.state = t.state AND t.state = (SELECT t.state FROM totals AS t, users as u 
 						WHERE NEW.uid = u.id AND u.state = t.state))
 	WHERE  state = (SELECT t.state FROM totals AS t, users as u 
 			  WHERE NEW.uid = u.id AND u.state = t.state);

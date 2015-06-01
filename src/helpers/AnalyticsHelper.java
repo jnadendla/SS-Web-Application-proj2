@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -17,6 +19,7 @@ public class AnalyticsHelper {
 	private static int colOffset = 0;
 	private static long startTime = 0;
 	private static long timeElapsed = 0;
+	private static Map<String,String> stateTotals = new HashMap<String,String>();
 
 	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
 			boolean nextCols) {
@@ -166,7 +169,18 @@ public class AnalyticsHelper {
 		String products;
 		
 		List<String> purchasers = new ArrayList<String>();
-		
+		String[] stateList = {"Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+		      "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+		      "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+		      "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+		      "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+		      "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+		      "West Virginia", "Wisconsin", "Wyoming"};
+		for(int i=0; i < stateList.length; ++i) {
+		   String state = stateList[i];
+		   purchasers.add(state);
+		}
+	    
 	      try {
 	            try {
 	                conn = HelperUtils.connect();
@@ -183,11 +197,12 @@ public class AnalyticsHelper {
    
 	            String query = "";
 	            query = "SELECT s.name AS state, p.name AS product, o.price AS price "
-	                  + "FROM users AS u, states AS s, products AS p, ordered AS o, totals AS t " + categoryFrom
+	                  + "FROM users AS u, states AS s, ordered AS o, totals AS t"
+	                  + ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p " + categoryFrom
 	                  + "WHERE u.id = o.uid AND s.id = u.state " + categoryFilter 
 	                  + "AND p.id = o.pid AND s.id = t.state ORDER BY t.total DESC, p.name";
 	            stmt = conn.prepareStatement(query);
-	            
+	            System.out.println(query);
 	            startTime = System.nanoTime();
 	            rs = stmt.executeQuery();
 	            timeElapsed = System.nanoTime() - startTime;
@@ -205,6 +220,7 @@ public class AnalyticsHelper {
 	               String purchaser = rs.getString("state");
 	               double price = rs.getDouble("price");
 	               String product = rs.getString("product");
+	               topk.add(purchaser);
 	               	               
 	               // The everyOther aspect is designed so have the sales from
 	               // the previous loop index
@@ -241,7 +257,9 @@ public class AnalyticsHelper {
 	                  }
 	            }
 	            
-	            String pQuery = "SELECT t.name AS name FROM states AS t ORDER BY t.name ";
+	            String pQuery = "SELECT s.name AS name, SUM(o.price) AS total "
+	                          + "FROM states AS s, ordered AS o, users AS u WHERE o.uid = u.id AND u.state = s.id "
+	                          + "GROUP BY s.name ORDER BY s.name ";
 	            
 	            stmt = conn.prepareStatement(pQuery);
 	            
@@ -252,15 +270,15 @@ public class AnalyticsHelper {
 	            
 	            while(order.next()) {
 	                String purchaser = order.getString("name");
-	                purchasers.add(purchaser);
+	                double total = order.getDouble("total");
+	                stateTotals.put(purchaser, String.valueOf(total));
 	            }
-	            
+
 	            if(sales.size() < 50) {
 	                for(int i = 0; i < purchasers.size(); i++) {
-	                   Sales s = sales.get(i);
-	                   if(!s.getPurchaser().equals(purchasers.get(i))) {
-	                       sales.add(new Sales(purchasers.get(i), 0.0, ""));
-	                   }
+	                    if(!topk.contains(purchasers.get(i))) {
+	                        sales.add(new Sales(purchasers.get(i), 0.0, ""));
+	                    }
 	                }
 	            }
 	            
@@ -396,39 +414,43 @@ public class AnalyticsHelper {
 		Connection conn = null;
 
 		PreparedStatement stmt = null;
+		
+		String value = stateTotals.get(purchaser);
+		if(value == null) return 0.0;
+		total += Double.parseDouble(value);
 
-		try {
-		   try {
-		      conn = HelperUtils.connect();
-		   } catch (Exception e) {
-		      System.err
-		      .println("Internal Server Error. This shouldn't happen.");
-		   }
-		   
-		   String query = "SELECT t.total AS total FROM totals AS t, states AS s WHERE s.name = ? AND t.state = s.id";
-		   stmt = conn.prepareStatement(query);
-		   
-		   stmt.setString(1, purchaser);
-		   startTime = System.nanoTime();
-		   rs = stmt.executeQuery();
-		   timeElapsed = System.nanoTime() - startTime;
-		   System.out.println(stmt.toString() + " : " + timeElapsed);
-		   
-		   while (rs.next()) {
-		      total += rs.getDouble("total");
-		   }
-		   
-		} catch (Exception e) {
-		   System.err.println("Some error happened dropping index!<br/>"
-		         + e.getLocalizedMessage());
-		} finally {
-		   try {
-		      stmt.close();
-		      conn.close();
-		   } catch (SQLException e) {
-		      e.printStackTrace();
-		   }
-		}
+//		try {
+//		   try {
+//		      conn = HelperUtils.connect();
+//		   } catch (Exception e) {
+//		      System.err
+//		      .println("Internal Server Error. This shouldn't happen.");
+//		   }
+//		   
+//		   String query = "SELECT t.total AS total FROM totals AS t, states AS s WHERE s.name = ? AND t.state = s.id";
+//		   stmt = conn.prepareStatement(query);
+//		   
+//		   stmt.setString(1, purchaser);
+//		   startTime = System.nanoTime();
+//		   rs = stmt.executeQuery();
+//		   timeElapsed = System.nanoTime() - startTime;
+//		   System.out.println(stmt.toString() + " : " + timeElapsed);
+//		   
+//		   while (rs.next()) {
+//		      total += rs.getDouble("total");
+//		   }
+//		   
+//		} catch (Exception e) {
+//		   System.err.println("Some error happened dropping index!<br/>"
+//		         + e.getLocalizedMessage());
+//		} finally {
+//		   try {
+//		      stmt.close();
+//		      conn.close();
+//		   } catch (SQLException e) {
+//		      e.printStackTrace();
+//		   }
+//		}
 
 		return total;
 	}
