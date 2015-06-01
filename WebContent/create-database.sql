@@ -133,8 +133,8 @@ CREATE TABLE sales (
 
 CREATE TABLE ordered (
     id          SERIAL PRIMARY KEY,
-    uid       INTEGER REFERENCES states (id) NOT NULL,
-    product     INTEGER REFERENCES products (id) NOT NULL,
+    uid       	INTEGER REFERENCES states (id) NOT NULL,
+    pid     	INTEGER REFERENCES products (id) NOT NULL,
     price       INTEGER NOT NULL
 );
 
@@ -154,7 +154,7 @@ CREATE TABLE ordered (
 
 CREATE FUNCTION salesfunc() RETURNS TRIGGER AS $orderS_table$
     BEGIN
-	INSERT INTO ordered(uid, product, price) VALUES
+	INSERT INTO ordered(uid, pid, price) VALUES
 	(NEW.uid, NEW.pid, (NEW.price * NEW.quantity));
         RETURN NEW;
     END;
@@ -227,10 +227,11 @@ CREATE FUNCTION totalsfunc() RETURNS TRIGGER AS $totals_table$
     BEGIN
 	UPDATE totals
         SET total = 
-            (SELECT SUM(o.price) FROM ordered AS o, users AS u, totals AS t 
-             WHERE o.uid = u.id AND u.state = t.state)
-	FROM users AS u, totals AS t
-	WHERE NEW.uid = u.id AND u.state = t.state;
+            (SELECT SUM(o.price) FROM ordered AS o,totals AS t 
+             WHERE NEW.id = o.id AND t.state = (SELECT t.state FROM totals AS t, users as u 
+						WHERE NEW.uid = u.id AND u.state = t.state))
+	WHERE  state = (SELECT t.state FROM totals AS t, users as u 
+			  WHERE NEW.uid = u.id AND u.state = t.state);
         RETURN NEW;
     END;
 $totals_table$ LANGUAGE plpgsql;
