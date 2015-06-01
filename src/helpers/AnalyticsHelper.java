@@ -54,7 +54,7 @@ public class AnalyticsHelper {
 			category = (String) session.getAttribute("categoryFilter");
 			if (category != null && !category.isEmpty()
 					&& !category.equals("all")) {
-				categoryFrom = ", categories AS c";
+				categoryFrom = ", categories AS c ";
 				categoryFilter = "AND p.cid = c.id AND c.id = " + category
 						+ " ";
 			}
@@ -80,7 +80,7 @@ public class AnalyticsHelper {
 		// of the query. Based on if the sort is alphabetical, we then sort by
 		// the name and product of the users/states. If the sort is topk, then
 		// we call a helper method to build the rest of the sales list.
-		sales = listByTopK(categoryFrom, category, filter);// ////TOPK		// HERE
+		sales = listByTopK(categoryFrom, categoryFilter, filter);// ////TOPK		// HERE
 		dropIndeciesOnTables();
 		return sales;
 	}
@@ -156,7 +156,7 @@ public class AnalyticsHelper {
 	 * ordering.
 	 */
 	private static List<Sales> listByTopK(String categoryFrom,
-			String category, String filter) {
+			String categoryFilter, String filter) {
 		List<Sales> sales = new ArrayList<Sales>();
 		List<String> topk = new ArrayList<String>();
 		ResultSet rs, order;
@@ -166,179 +166,116 @@ public class AnalyticsHelper {
 		String products;
 		
 		List<String> purchasers = new ArrayList<String>();
-
-		try {
-			try {
-				conn = HelperUtils.connect();
-			} catch (Exception e) {
-				System.err
-						.println("Internal Server Error. This shouldn't happen.");
-				return sales;
-			}
-			// stmt = conn.createStatement();
-			String query = "";
-
-			String categoryFilter = "";
-			String productsFrom = "";
-			if (!category.equals("all")) {
-				categoryFilter = "AND s.pid = p.id AND p.cid = c.id AND c.id = '"
-						+ category + "' ";
-				productsFrom = ", products AS p";
-			}
-
-			products = ", (SELECT * FROM products AS n ORDER BY n.name"
-					+ limitCols + ") p";
-
-			String pQuery = "";
-			
-			// Get the topk ordering or states
-			query = "SELECT t.name AS name FROM sales AS s, users AS u, states AS t"
-					+ productsFrom
-					+ categoryFrom
-					+ " WHERE t.id = u.state AND u.id = s.uid AND u.role = ? "
-					+ categoryFilter
-					+ "GROUP BY t.name ORDER BY SUM(s.price * s.quantity) DESC";
 		
-			pQuery = "SELECT t.name AS name FROM states AS t "
-					+ "GROUP BY t.name ORDER BY t.name ";
-			
-			
-			stmt = conn.prepareStatement(query);
-			stmt.setString(1, "customer");
-			
-			startTime = System.nanoTime();
-			order = stmt.executeQuery();
-			timeElapsed = System.nanoTime() - startTime;
-			System.out.println(query + " : " + timeElapsed);
-			
+	      try {
+	            try {
+	                conn = HelperUtils.connect();
+	            } catch (Exception e) {
+	                System.err
+	                        .println("Internal Server Error. This shouldn't happen.");
+	                return sales;
+	            }
+	            // stmt = conn.createStatement();
 
-			// populate list
-			while (order.next()) {
-				String user = order.getString("name");
-				topk.add(user);
-			}
-			
-			stmt = conn.prepareStatement(pQuery);
-			
-			startTime = System.nanoTime();
-			order = stmt.executeQuery();
-			timeElapsed = System.nanoTime() - startTime;
-			System.out.println(pQuery + " : " + timeElapsed);
-			
-			while(order.next()) {
-				String purchaser = order.getString("name");
-				purchasers.add(purchaser);
-			}
-			
-			if(topk.size() < 20) {
-				for(int i = 0; i < purchasers.size(); i++) {
-					if(!topk.contains(purchasers.get(i))) {
-						topk.add(purchasers.get(i));
-					}
-				}
-			}
-		} catch (Exception e) {
-			System.err.println("Some error happened!<br/>"
-					+ e.getLocalizedMessage());
-			return sales;
-		}
-
-		try {
-			try {
-				conn = HelperUtils.connect();
-			} catch (Exception e) {
-				System.err
-						.println("Internal Server Error. This shouldn't happen.");
-				return sales;
-			}
-			// stmt = conn.createStatement();
-
-			// Loop through all the names ordered by topk and query sales
-			// information in topk order
-			for (int i = 0; i < topk.size(); ++i) {
-				String name = topk.get(i);
-
-				String nameFilter = " AND t.name = '" + name + "'";
-
-				String query = "";
-				query = "SELECT t.name AS name, (s.price * s.quantity) AS total, p.name AS product "
-						+ "FROM sales AS s, users AS u, states AS t"
-						+ products
-						+ categoryFrom
-						+ filter
-						+ nameFilter
-						+ " ORDER BY p.name";
-
-				System.out.println(query);
-				stmt = conn.prepareStatement(query);
-				
-				startTime = System.nanoTime();
-				rs = stmt.executeQuery();
-				timeElapsed = System.nanoTime() - startTime;
-				System.out.println(query + " : " + timeElapsed);
-
-				if (!rs.isBeforeFirst()) {
-					Sales s = new Sales(topk.get(i), 0.0, "");
-					sales.add(s);
-					continue;
-				}
-
-				// populate list
-				boolean everyOther = false;
-				Sales temp = null;
-				while (rs.next()) {
-					String purchaser = rs.getString("name");
-					double price = rs.getDouble("total");
-					String product = rs.getString("product");
-
-					// The everyOther aspect is designed so have the sales from
-					// the previous loop index
-					// and we can check if the current sale is mad by the same
-					// user and of the same
-					// product. If so, we just mold these sales into 1 sale.
-					// This is neccessary
-					// because users can purchase items multiple times but at
-					// different instances, so
-					// the database will contain multiple sales of the same
-					// product.
-					if (everyOther) {
-						if (temp.getPurchaser().equals(purchaser)
-								&& temp.getProduct().equals(product)) {
-							String tempPurchaser = temp.getPurchaser();
-							double tempPrice = temp.getPrice() + price;
-							String tempProduct = temp.getProduct();
-							temp = new Sales(tempPurchaser, tempPrice,
-									tempProduct);
-							if (rs.isLast())// make sure to add item it is the
-											// last one
-								sales.add(temp);
-						} else {
-							sales.add(temp);
-							temp = new Sales(purchaser, price, product);
-							if (rs.isLast())// make sure to add item it is the
-											// last one
-								sales.add(temp);
-						}
-					} else {
-						everyOther = true;
-						temp = new Sales(purchaser, price, product);
-						if (rs.isLast())// make sure to add last item
-							sales.add(temp);
-					}
-				}
-			}
-		} catch (Exception e) {
-			System.err.println("Some error happened!<br/>"
-					+ e.getLocalizedMessage());
-			return sales;
-		} finally {
-			try {
-				stmt.close();
-				conn.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
+	            // Loop through all the names ordered by topk and query sales
+	            // information in topk order
+   
+   
+	            String query = "";
+	            query = "SELECT s.name AS state, p.name AS product, o.price AS price "
+	                  + "FROM users AS u, states AS s, products AS p, ordered AS o, totals AS t " + categoryFrom
+	                  + "WHERE u.id = o.uid AND s.id = u.state " + categoryFilter 
+	                  + "AND p.id = o.pid AND s.id = t.state ORDER BY t.total DESC, p.name";
+	            stmt = conn.prepareStatement(query);
+	            
+	            startTime = System.nanoTime();
+	            rs = stmt.executeQuery();
+	            timeElapsed = System.nanoTime() - startTime;
+	            System.out.println(query + " : " + timeElapsed);
+	            
+	            boolean ignore = false;
+	            if (!rs.isBeforeFirst()) {
+                   ignore = true;
+                }
+	            
+	            // populate list
+	            boolean everyOther = false;
+	            Sales temp = null;
+	            while (ignore == false && rs.next()) {
+	               String purchaser = rs.getString("state");
+	               double price = rs.getDouble("price");
+	               String product = rs.getString("product");
+	               	               
+	               // The everyOther aspect is designed so have the sales from
+	               // the previous loop index
+	               // and we can check if the current sale is mad by the same
+	               // user and of the same
+	               // product. If so, we just mold these sales into 1 sale.
+	               // This is neccessary
+	               // because users can purchase items multiple times but at
+	               // different instances, so
+	               // the database will contain multiple sales of the same
+	               // product.
+	               if (everyOther) {
+	                  if (temp.getPurchaser().equals(purchaser)
+	                        && temp.getProduct().equals(product)) {
+	                     String tempPurchaser = temp.getPurchaser();
+	                     double tempPrice = temp.getPrice() + price;
+	                     String tempProduct = temp.getProduct();
+	                     temp = new Sales(tempPurchaser, tempPrice,
+	                           tempProduct);
+	                     if (rs.isLast())// make sure to add item it is the
+	                        // last one
+	                        sales.add(temp);
+	                     } else {
+	                        sales.add(temp);
+	                        temp = new Sales(purchaser, price, product);
+	                        if (rs.isLast())// make sure to add item it is the// last one
+	                           sales.add(temp);
+	                    }
+	               } else {
+	                  everyOther = true;
+	                  temp = new Sales(purchaser, price, product);
+	                  if (rs.isLast())// make sure to add last item
+	                     sales.add(temp);
+	                  }
+	            }
+	            
+	            String pQuery = "SELECT t.name AS name FROM states AS t ORDER BY t.name ";
+	            
+	            stmt = conn.prepareStatement(pQuery);
+	            
+	            startTime = System.nanoTime();
+	            order = stmt.executeQuery();
+	            timeElapsed = System.nanoTime() - startTime;
+	            System.out.println(pQuery + " : " + timeElapsed);
+	            
+	            while(order.next()) {
+	                String purchaser = order.getString("name");
+	                purchasers.add(purchaser);
+	            }
+	            
+	            if(sales.size() < 50) {
+	                for(int i = 0; i < purchasers.size(); i++) {
+	                   Sales s = sales.get(i);
+	                   if(!s.getPurchaser().equals(purchasers.get(i))) {
+	                       sales.add(new Sales(purchasers.get(i), 0.0, ""));
+	                   }
+	                }
+	            }
+	            
+	        } catch (Exception e) {
+	            System.err.println("Some error happened!<br/>"
+	                    + e.getLocalizedMessage());
+	            return sales;
+	        } finally {
+	            try {
+	                stmt.close();
+	                conn.close();
+	            } catch (SQLException e) {
+	                e.printStackTrace();
+	            }
+	        }
 
 		return sales;
 	}
@@ -456,44 +393,42 @@ public class AnalyticsHelper {
 		double total = 0;
 
 		ResultSet rs;
-		Connection conn = HelperUtils.connect();
+		Connection conn = null;
 
 		PreparedStatement stmt = null;
 
-		String displayFilter = null;
-
-		displayFilter = request.getParameter("displayFilter");
-
-		// System.out.println(displayFilter);
-
-		if (displayFilter == null) {
-			displayFilter = (String) session.getAttribute("displayFilter");
+		try {
+		   try {
+		      conn = HelperUtils.connect();
+		   } catch (Exception e) {
+		      System.err
+		      .println("Internal Server Error. This shouldn't happen.");
+		   }
+		   
+		   String query = "SELECT t.total AS total FROM totals AS t, states AS s WHERE s.name = ? AND t.state = s.id";
+		   stmt = conn.prepareStatement(query);
+		   
+		   stmt.setString(1, purchaser);
+		   startTime = System.nanoTime();
+		   rs = stmt.executeQuery();
+		   timeElapsed = System.nanoTime() - startTime;
+		   System.out.println(stmt.toString() + " : " + timeElapsed);
+		   
+		   while (rs.next()) {
+		      total += rs.getDouble("total");
+		   }
+		   
+		} catch (Exception e) {
+		   System.err.println("Some error happened dropping index!<br/>"
+		         + e.getLocalizedMessage());
+		} finally {
+		   try {
+		      stmt.close();
+		      conn.close();
+		   } catch (SQLException e) {
+		      e.printStackTrace();
+		   }
 		}
-
-		if (displayFilter.equals("customers") || displayFilter.isEmpty()) {
-			stmt = conn
-					.prepareStatement("SELECT (s.price * s.quantity) AS total "
-							+ "FROM sales AS s, users AS u WHERE u.name = ? AND s.uid = u.id");
-		} else if (displayFilter.equals("states")) {
-			//System.out.println(purchaser);
-			stmt = conn
-					.prepareStatement("SELECT (s.price * s.quantity) AS total "
-							+ "FROM sales AS s, users AS u, states AS st WHERE st.name = ? AND st.id = u.state AND s.uid = u.id");
-		}
-
-		stmt.setString(1, purchaser);
-		
-		startTime = System.nanoTime();
-		rs = stmt.executeQuery();
-		timeElapsed = System.nanoTime() - startTime;
-		System.out.println(stmt.toString() + " : " + timeElapsed);
-
-		while (rs.next()) {
-			total += rs.getDouble("total");
-		}
-
-		stmt.close();
-		conn.close();
 
 		return total;
 	}

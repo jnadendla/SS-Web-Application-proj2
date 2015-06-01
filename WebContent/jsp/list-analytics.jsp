@@ -41,20 +41,20 @@
 			<td>
 				<form action="">
 					<input type="submit" value="Next 50" name="cols"
-						<%if (numCols < 10) {%> disabled <%}%>>
+						<%if (numCols < 50) {%> disabled <%}%>>
 				</form>
 			</td>
 		</tr>
 		<tr></tr>
 		<%
-			String currUser = "";
+			String currState = "";
 				boolean emptyRow = false;
 				
 				boolean newrow = false;
 				boolean getnext = true;
 				Sales s = null;
 				for (int i = 0; i < products.size(); ++i) {
-					//System.out.println(i);
+					//System.out.println(products.size());
 					if (getnext && salesIter.hasNext()) {
 						s = salesIter.next();
 						getnext = false;
@@ -63,8 +63,8 @@
 					String purchaser = s.getPurchaser();//can be a user or state
 					double total = s.getPrice();
 					String product = s.getProduct();
-					if (!currUser.equals(purchaser) && i == 0) {
-						currUser = purchaser;
+					if (!currState.equals(purchaser) && i == 0) {
+					    currState = purchaser;
 						newrow = true;
 						numRows++;
 						--i;
@@ -82,7 +82,7 @@
 								+ AnalyticsHelper.getPurchaserTotal(request,
 										purchaser) + ")"%></B></td>
 		<%
-			} else if (products.get(i).equals(product)) {
+			} else if (products.get(i).equals(product) && currState.equals(purchaser)) {
 						getnext = true;
 		%>
 		<td><%=total%></td>
