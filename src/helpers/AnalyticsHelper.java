@@ -24,9 +24,6 @@ public class AnalyticsHelper {
 	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
 			boolean nextCols) {
 		List<Sales> sales = new ArrayList<Sales>();
-		ResultSet rs;
-		Connection conn = null;
-		PreparedStatement stmt = null;
 		String categoryFrom = "";
 		String categoryFilter = "", additionalFilter = "", category = "";
 		boolean refresh = false;
@@ -258,7 +255,8 @@ public class AnalyticsHelper {
 	            }
 	            
 	            String pQuery = "SELECT s.name AS name, SUM(o.price) AS total "
-	                          + "FROM states AS s, ordered AS o, users AS u WHERE o.uid = u.id AND u.state = s.id "
+	                          + "FROM states AS s, ordered AS o, users AS u, products AS p " + categoryFrom
+	                          + "WHERE o.uid = u.id AND u.state = s.id AND o.pid = p.id " + categoryFilter
 	                          + "GROUP BY s.name ORDER BY s.name ";
 	            
 	            stmt = conn.prepareStatement(pQuery);
@@ -267,6 +265,7 @@ public class AnalyticsHelper {
 	            order = stmt.executeQuery();
 	            timeElapsed = System.nanoTime() - startTime;
 	            System.out.println(pQuery + " : " + timeElapsed);
+	            stateTotals.clear();
 	            
 	            while(order.next()) {
 	                String purchaser = order.getString("name");
@@ -409,48 +408,10 @@ public class AnalyticsHelper {
 		}
 
 		double total = 0;
-
-		ResultSet rs;
-		Connection conn = null;
-
-		PreparedStatement stmt = null;
 		
 		String value = stateTotals.get(purchaser);
 		if(value == null) return 0.0;
 		total += Double.parseDouble(value);
-
-//		try {
-//		   try {
-//		      conn = HelperUtils.connect();
-//		   } catch (Exception e) {
-//		      System.err
-//		      .println("Internal Server Error. This shouldn't happen.");
-//		   }
-//		   
-//		   String query = "SELECT t.total AS total FROM totals AS t, states AS s WHERE s.name = ? AND t.state = s.id";
-//		   stmt = conn.prepareStatement(query);
-//		   
-//		   stmt.setString(1, purchaser);
-//		   startTime = System.nanoTime();
-//		   rs = stmt.executeQuery();
-//		   timeElapsed = System.nanoTime() - startTime;
-//		   System.out.println(stmt.toString() + " : " + timeElapsed);
-//		   
-//		   while (rs.next()) {
-//		      total += rs.getDouble("total");
-//		   }
-//		   
-//		} catch (Exception e) {
-//		   System.err.println("Some error happened dropping index!<br/>"
-//		         + e.getLocalizedMessage());
-//		} finally {
-//		   try {
-//		      stmt.close();
-//		      conn.close();
-//		   } catch (SQLException e) {
-//		      e.printStackTrace();
-//		   }
-//		}
 
 		return total;
 	}
