@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS totals CASCADE;
 DROP FUNCTION IF EXISTS orderfunc() CASCADE;
 DROP FUNCTION IF EXISTS salesfunc() CASCADE;
 DROP FUNCTION IF EXISTS totalsfunc() CASCADE;
+DROP FUNCTION IF EXISTS categoriesfunc() CASCADE;
 
 /**table 0: [entity] states**/
 CREATE TABLE states (
@@ -89,10 +90,6 @@ CREATE TABLE categories (
     name        TEXT NOT NULL UNIQUE CHECK (name <> ''),
     description TEXT NOT NULL
 );
-INSERT INTO categories (name, description) VALUES('Computers','A computer is a general purpose device that can be programmed to carry out a set of arithmetic or logical operations automatically. Since a sequence of operations can be readily changed, the computer can solve more than one kind of problem.');
-INSERT INTO categories (name, description) VALUES('Cell Phones','A mobile phone (also known as a cellular phone, cell phone, and a hand phone) is a phone that can make and receive telephone calls over a radio link while moving around a wide geographic area. It does so by connecting to a cellular network provided by a mobile phone operator, allowing access to the public telephone network.');
-INSERT INTO categories (name, description) VALUES('Cameras','A camera is an optical instrument that records images that can be stored directly, transmitted to another location, or both. These images may be still photographs or moving images such as videos or movies.');
-INSERT INTO categories (name, description) VALUES('Video Games','A video game is an electronic game that involves human interaction with a user interface to generate visual feedback on a video device..');
 
 /**table 3: [entity] product**/
 CREATE TABLE products (
@@ -102,19 +99,6 @@ CREATE TABLE products (
     SKU         TEXT NOT NULL UNIQUE,
     price       INTEGER NOT NULL
 );
-INSERT INTO products (cid, name, SKU, price) VALUES(1, 'Apple MacBook',     '103001',   1200); /**1**/
-INSERT INTO products (cid, name, SKU, price) VALUES(1, 'HP Laptop',         '106044',   480);
-INSERT INTO products (cid, name, SKU, price) VALUES(1, 'Dell Laptop',       '109023',   399);/**3**/
-INSERT INTO products (cid, name, SKU, price) VALUES(2, 'Iphone 5s',         '200101',   709);
-INSERT INTO products (cid, name, SKU, price) VALUES(2, 'Samsung Galaxy S4', '208809',   488);/**5**/
-INSERT INTO products (cid, name, SKU, price) VALUES(2, 'LG Optimus g',       '209937',  375);
-INSERT INTO products (cid, name, SKU, price) VALUES(3, 'Sony DSC-RX100M',   '301211',   689);/**7**/
-INSERT INTO products (cid, name, SKU, price) VALUES(3, 'Canon EOS Rebel T3',     '304545',  449);
-INSERT INTO products (cid, name, SKU, price) VALUES(3, 'Nikon D3100',       '308898',   520);
-INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Xbox 360',          '405065',   249);/**10**/
-INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Nintendo Wii U ',    '407033',  430);
-INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Nintendo Wii',      '408076',   232);
-
 
 -- should be removed for project 2.
 CREATE TABLE cart_history (
@@ -169,10 +153,68 @@ EXECUTE PROCEDURE salesfunc();
 CREATE TABLE totals (
     id          SERIAL PRIMARY KEY,
     state       INTEGER REFERENCES states (id) NOT NULL,
+    cid		INTEGER REFERENCES states (id),
     total       INTEGER NOT NULL
 );
 
-INSERT INTO totals (state, total) VALUES (1, 0.0);
+CREATE TABLE allTotals (
+    id		SERIAL PRIMARY KEY,
+    state	INTEGER REFERENCES states (id) NOT NULL,
+    total	INTEGER NOT NULL
+);
+
+INSERT INTO allTotals (state, total) VALUES (1, 0.0);
+INSERT INTO allTotals (state, total) VALUES (2, 0.0);
+INSERT INTO allTotals (state, total) VALUES (3, 0.0);
+INSERT INTO allTotals (state, total) VALUES (4, 0.0);
+INSERT INTO allTotals (state, total) VALUES (5, 0.0);
+INSERT INTO allTotals (state, total) VALUES (6, 0.0);
+INSERT INTO allTotals (state, total) VALUES (7, 0.0);
+INSERT INTO allTotals (state, total) VALUES (8, 0.0);
+INSERT INTO allTotals (state, total) VALUES (9, 0.0);
+INSERT INTO allTotals (state, total) VALUES (10, 0.0);
+INSERT INTO allTotals (state, total) VALUES (11, 0.0);
+INSERT INTO allTotals (state, total) VALUES (12, 0.0);
+INSERT INTO allTotals (state, total) VALUES (13, 0.0);
+INSERT INTO allTotals (state, total) VALUES (14, 0.0);
+INSERT INTO allTotals (state, total) VALUES (15, 0.0);
+INSERT INTO allTotals (state, total) VALUES (16, 0.0);
+INSERT INTO allTotals (state, total) VALUES (17, 0.0);
+INSERT INTO allTotals (state, total) VALUES (18, 0.0);
+INSERT INTO allTotals (state, total) VALUES (19, 0.0);
+INSERT INTO allTotals (state, total) VALUES (20, 0.0);
+INSERT INTO allTotals (state, total) VALUES (21, 0.0);
+INSERT INTO allTotals (state, total) VALUES (22, 0.0);
+INSERT INTO allTotals (state, total) VALUES (23, 0.0);
+INSERT INTO allTotals (state, total) VALUES (24, 0.0);
+INSERT INTO allTotals (state, total) VALUES (25, 0.0);
+INSERT INTO allTotals (state, total) VALUES (26, 0.0);
+INSERT INTO allTotals (state, total) VALUES (27, 0.0);
+INSERT INTO allTotals (state, total) VALUES (28, 0.0);
+INSERT INTO allTotals (state, total) VALUES (29, 0.0);
+INSERT INTO allTotals (state, total) VALUES (30, 0.0);
+INSERT INTO allTotals (state, total) VALUES (31, 0.0);
+INSERT INTO allTotals (state, total) VALUES (32, 0.0);
+INSERT INTO allTotals (state, total) VALUES (33, 0.0);
+INSERT INTO allTotals (state, total) VALUES (34, 0.0);
+INSERT INTO allTotals (state, total) VALUES (35, 0.0);
+INSERT INTO allTotals (state, total) VALUES (36, 0.0);
+INSERT INTO allTotals (state, total) VALUES (37, 0.0);
+INSERT INTO allTotals (state, total) VALUES (38, 0.0);
+INSERT INTO allTotals (state, total) VALUES (39, 0.0);
+INSERT INTO allTotals (state, total) VALUES (40, 0.0);
+INSERT INTO allTotals (state, total) VALUES (41, 0.0);
+INSERT INTO allTotals (state, total) VALUES (42, 0.0);
+INSERT INTO allTotals (state, total) VALUES (43, 0.0);
+INSERT INTO allTotals (state, total) VALUES (44, 0.0);
+INSERT INTO allTotals (state, total) VALUES (45, 0.0);
+INSERT INTO allTotals (state, total) VALUES (46, 0.0);
+INSERT INTO allTotals (state, total) VALUES (47, 0.0);
+INSERT INTO allTotals (state, total) VALUES (48, 0.0);
+INSERT INTO allTotals (state, total) VALUES (49, 0.0);
+INSERT INTO allTotals (state, total) VALUES (50, 0.0);
+
+/*INSERT INTO totals (state, total) VALUES (1, 0.0);
 INSERT INTO totals (state, total) VALUES (2, 0.0);
 INSERT INTO totals (state, total) VALUES (3, 0.0);
 INSERT INTO totals (state, total) VALUES (4, 0.0);
@@ -221,17 +263,99 @@ INSERT INTO totals (state, total) VALUES (46, 0.0);
 INSERT INTO totals (state, total) VALUES (47, 0.0);
 INSERT INTO totals (state, total) VALUES (48, 0.0);
 INSERT INTO totals (state, total) VALUES (49, 0.0);
-INSERT INTO totals (state, total) VALUES (50, 0.0);
+INSERT INTO totals (state, total) VALUES (50, 0.0);*/
+
+CREATE FUNCTION categoriesfunc() RETURNS TRIGGER AS $cat$
+    BEGIN
+	INSERT INTO totals(state, cid, total) VALUES (1, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (2, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (3, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (4, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (5, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (6, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (7, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (8, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (9, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (10, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (11, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (12, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (13, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (14, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (15, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (16, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (17, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (18, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (19, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (20, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (21, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (22, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (23, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (24, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (25, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (26, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (27, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (28, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (29, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (30, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (31, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (32, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (33, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (34, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (35, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (36, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (37, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (38, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (39, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (40, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (41, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (42, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (43, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (44, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (45, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (46, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (47, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (48, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (49, NEW.ID, 0);
+	INSERT INTO totals(state, cid, total) VALUES (50, NEW.ID, 0);
+        RETURN NEW;
+    END;
+$cat$ LANGUAGE plpgsql;
+
+CREATE FUNCTION allTotalsfunc() RETURNS TRIGGER AS $totals_table$
+    BEGIN
+	UPDATE allTotals
+        SET total = 
+            (SELECT SUM(o.price) FROM ordered AS o, allTotals AS t 
+             WHERE NEW.id = o.id AND t.state = (SELECT t.state FROM allTotals AS t, users as u 
+						WHERE NEW.uid = u.id AND u.state = t.state))
+	WHERE  state = (SELECT t.state FROM allTotals AS t, users as u 
+			  WHERE NEW.uid = u.id AND u.state = t.state);
+        RETURN NEW;
+    END;
+$totals_table$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_allTotals
+    AFTER INSERT
+    ON ordered
+    FOR EACH ROW
+EXECUTE PROCEDURE allTotalsfunc();
+
+CREATE TRIGGER trg_categories
+    AFTER INSERT
+    ON categories
+    FOR EACH ROW
+EXECUTE PROCEDURE categoriesfunc();
 
 CREATE FUNCTION totalsfunc() RETURNS TRIGGER AS $totals_table$
     BEGIN
 	UPDATE totals
         SET total = 
-            (SELECT SUM(o.price) FROM ordered AS o,totals AS t, users AS u 
-             WHERE o.uid = u.id AND u.state = t.state AND t.state = (SELECT t.state FROM totals AS t, users as u 
-						WHERE NEW.uid = u.id AND u.state = t.state))
-	WHERE  state = (SELECT t.state FROM totals AS t, users as u 
-			  WHERE NEW.uid = u.id AND u.state = t.state);
+            (SELECT SUM(o.price) FROM ordered AS o, totals AS t, users AS u, products AS p
+             WHERE o.uid = u.id AND u.state = t.state AND o.pid = p.id AND p.cid = t.cid AND 
+             t.cid = (SELECT c.id FROM categories AS c, products AS p WHERE NEW.pid = p.id AND p.cid = c.id)
+             AND t.state = (SELECT u.state FROM users AS u WHERE NEW.uid = u.id))
+	WHERE  state = (SELECT u.state FROM users AS u WHERE NEW.uid = u.id) AND
+	       cid = (SELECT p.cid FROM products AS p WHERE NEW.pid = p.id);
         RETURN NEW;
     END;
 $totals_table$ LANGUAGE plpgsql;
@@ -241,3 +365,21 @@ CREATE TRIGGER trg_totals
     ON ordered
     FOR EACH ROW
 EXECUTE PROCEDURE totalsfunc();
+
+INSERT INTO categories (name, description) VALUES('Computers','A computer is a general purpose device that can be programmed to carry out a set of arithmetic or logical operations automatically. Since a sequence of operations can be readily changed, the computer can solve more than one kind of problem.');
+INSERT INTO categories (name, description) VALUES('Cell Phones','A mobile phone (also known as a cellular phone, cell phone, and a hand phone) is a phone that can make and receive telephone calls over a radio link while moving around a wide geographic area. It does so by connecting to a cellular network provided by a mobile phone operator, allowing access to the public telephone network.');
+INSERT INTO categories (name, description) VALUES('Cameras','A camera is an optical instrument that records images that can be stored directly, transmitted to another location, or both. These images may be still photographs or moving images such as videos or movies.');
+INSERT INTO categories (name, description) VALUES('Video Games','A video game is an electronic game that involves human interaction with a user interface to generate visual feedback on a video device..');
+
+INSERT INTO products (cid, name, SKU, price) VALUES(1, 'Apple MacBook',     '103001',   1200); /**1**/
+INSERT INTO products (cid, name, SKU, price) VALUES(1, 'HP Laptop',         '106044',   480);
+INSERT INTO products (cid, name, SKU, price) VALUES(1, 'Dell Laptop',       '109023',   399);/**3**/
+INSERT INTO products (cid, name, SKU, price) VALUES(2, 'Iphone 5s',         '200101',   709);
+INSERT INTO products (cid, name, SKU, price) VALUES(2, 'Samsung Galaxy S4', '208809',   488);/**5**/
+INSERT INTO products (cid, name, SKU, price) VALUES(2, 'LG Optimus g',       '209937',  375);
+INSERT INTO products (cid, name, SKU, price) VALUES(3, 'Sony DSC-RX100M',   '301211',   689);/**7**/
+INSERT INTO products (cid, name, SKU, price) VALUES(3, 'Canon EOS Rebel T3',     '304545',  449);
+INSERT INTO products (cid, name, SKU, price) VALUES(3, 'Nikon D3100',       '308898',   520);
+INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Xbox 360',          '405065',   249);/**10**/
+INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Nintendo Wii U ',    '407033',  430);
+INSERT INTO products (cid, name, SKU, price) VALUES(4, 'Nintendo Wii',      '408076',   232);

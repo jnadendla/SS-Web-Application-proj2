@@ -25,7 +25,7 @@ public class AnalyticsHelper {
 			boolean nextCols) {
 		List<Sales> sales = new ArrayList<Sales>();
 		String categoryFrom = "";
-		String categoryFilter = "", additionalFilter = "", category = "";
+		String categoryFilter = "", additionalFilter = "", category = "", categoryTotalsFilter = "";
 		boolean refresh = false;
 
 		// If the RUN QUERY button has been pressed this should capture the new
@@ -56,7 +56,8 @@ public class AnalyticsHelper {
 					&& !category.equals("all")) {
 				categoryFrom = ", categories AS c ";
 				categoryFilter = "AND p.cid = c.id AND c.id = " + category
-						+ " ";
+						+ " AND c.id = t.cid ";
+				categoryTotalsFilter = "AND p.cid = c.id AND c.id = " + category + "";
 			}
 		} catch (Exception e) {
 		}
@@ -80,7 +81,7 @@ public class AnalyticsHelper {
 		// of the query. Based on if the sort is alphabetical, we then sort by
 		// the name and product of the users/states. If the sort is topk, then
 		// we call a helper method to build the rest of the sales list.
-		sales = listByTopK(categoryFrom, categoryFilter, filter);// ////TOPK		// HERE
+		sales = listByTopK(categoryFrom, categoryFilter, categoryTotalsFilter);// ////TOPK		// HERE
 		dropIndeciesOnTables();
 		return sales;
 	}
@@ -156,7 +157,7 @@ public class AnalyticsHelper {
 	 * ordering.
 	 */
 	private static List<Sales> listByTopK(String categoryFrom,
-			String categoryFilter, String filter) {
+			String categoryFilter, String categoryTotalsFilter) {
 		List<Sales> sales = new ArrayList<Sales>();
 		List<String> topk = new ArrayList<String>();
 		ResultSet rs, order;
@@ -193,11 +194,24 @@ public class AnalyticsHelper {
    
    
 	            String query = "";
-	            query = "SELECT s.name AS state, p.name AS product, o.price AS price "
-	                  + "FROM users AS u, states AS s, ordered AS o, totals AS t"
-	                  + ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p " + categoryFrom
-	                  + "WHERE u.id = o.uid AND s.id = u.state " + categoryFilter 
-	                  + "AND p.id = o.pid AND s.id = t.state ORDER BY t.total DESC, p.name";
+	            String category = (String) session.getAttribute("categoryFilter");
+	            System.out.println(category);
+	            if(category != null && !category.equals("all")) {
+      	            query = "SELECT s.name AS state, p.name AS product, o.price AS price "
+      	                  + "FROM users AS u, states AS s, ordered AS o, totals AS t, categories AS c"
+      	                  + ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p "
+      	                  + "WHERE u.id = o.uid AND s.id = u.state " + categoryFilter 
+      	                  + "AND p.id = o.pid AND s.id = t.state "
+      	                  + "ORDER BY t.total DESC, p.name";
+	            } else {
+	                query = "SELECT s.name AS state, p.name AS product, o.price AS price "
+	                      + "FROM users AS u, states AS s, ordered AS o, allTotals AS t"
+	                      + ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p "
+	                      + "WHERE u.id = o.uid AND s.id = u.state "
+	                      + "AND p.id = o.pid AND s.id = t.state ORDER BY t.total DESC, p.name";
+	            }
+	            
+	            
 	            stmt = conn.prepareStatement(query);
 	            System.out.println(query);
 	            startTime = System.nanoTime();
@@ -256,7 +270,7 @@ public class AnalyticsHelper {
 	            
 	            String pQuery = "SELECT s.name AS name, SUM(o.price) AS total "
 	                          + "FROM states AS s, ordered AS o, users AS u, products AS p " + categoryFrom
-	                          + "WHERE o.uid = u.id AND u.state = s.id AND o.pid = p.id " + categoryFilter
+	                          + "WHERE o.uid = u.id AND u.state = s.id AND o.pid = p.id " + categoryTotalsFilter
 	                          + "GROUP BY s.name ORDER BY s.name ";
 	            
 	            stmt = conn.prepareStatement(pQuery);

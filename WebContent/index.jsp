@@ -30,7 +30,8 @@ contentType="text/html; charset=utf-8" language="java"%>
                             %>
                             <%
                             	if (((String)session.getAttribute("role")).equalsIgnoreCase("owner")) {
-                            %>
+     
+                            	   %>
                             <div class="container">
                             <jsp:include page="/jsp/owner-menu.jsp" />
                             </div>
