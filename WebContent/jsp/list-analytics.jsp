@@ -43,6 +43,7 @@
 					<input type="submit" value="Next 50" name="cols"
 						<%if (numCols < 50) {%> disabled <%}%>>
 				</form>
+				<button onclick="">Refresh</button>
 			</td>
 		</tr>
 		<tr></tr>
