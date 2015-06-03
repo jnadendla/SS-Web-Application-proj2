@@ -20,6 +20,10 @@ public class AnalyticsHelper {
 	private static long startTime = 0;
 	private static long timeElapsed = 0;
 	private static Map<String,String> stateTotals = new HashMap<String,String>();
+	
+	public static int maxIndex;
+	public static Map<Integer, String> rowMap = new HashMap<Integer, String>();
+	public static Map<Integer, String> colMap = new HashMap<Integer, String>();
 
 	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
 			boolean nextCols) {

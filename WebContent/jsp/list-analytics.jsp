@@ -9,11 +9,12 @@
 	String runClick = request.getParameter("runQ");
 	if (colClick != null && colClick.equals("Next 50")) {
 		nextCols = true;
-	} else if(runClick != null && runClick.equals("Run Query")) {
+	} else if (runClick != null && runClick.equals("Run Query")) {
 		runQ = true;
 	}
 
-	List<Sales> sales = AnalyticsHelper.listSales(request, runQ, nextCols);
+	List<Sales> sales = AnalyticsHelper.listSales(request, runQ,
+			nextCols);
 	List<String> products = AnalyticsHelper
 			.listProductsAlphabetically();
 	if (!sales.isEmpty() && !products.isEmpty()) {
@@ -50,10 +51,15 @@
 		<%
 			String currState = "";
 				boolean emptyRow = false;
-				
+
 				boolean newrow = false;
 				boolean getnext = true;
 				Sales s = null;
+
+				int id = 0;
+				AnalyticsHelper.rowMap.clear();
+				AnalyticsHelper.rowMap.clear();
+
 				for (int i = 0; i < products.size(); ++i) {
 					//System.out.println(products.size());
 					if (getnext && salesIter.hasNext()) {
@@ -65,11 +71,11 @@
 					double total = s.getPrice();
 					String product = s.getProduct();
 					if (!currState.equals(purchaser) && i == 0) {
-					    currState = purchaser;
+						currState = purchaser;
 						newrow = true;
 						numRows++;
 						--i;
-						if(product.equals("")){
+						if (product.equals("")) {
 							emptyRow = true;
 						} else {
 							emptyRow = false;
@@ -83,19 +89,25 @@
 								+ AnalyticsHelper.getPurchaserTotal(request,
 										purchaser) + ")"%></B></td>
 		<%
-			} else if (products.get(i).equals(product) && currState.equals(purchaser)) {
+			} else if (products.get(i).equals(product)
+							&& currState.equals(purchaser)) {
 						getnext = true;
+						AnalyticsHelper.colMap.put(id, product);
+						AnalyticsHelper.rowMap.put(id, purchaser);
 		%>
-		<td><%=total%></td>
+		<td id=<%=id%>><%=total%></td>
 		<%
 			} else {
+						AnalyticsHelper.colMap.put(id, product);
+						AnalyticsHelper.rowMap.put(id, purchaser);
 		%>
-		<td>0.0</td>
+		<td id=<%=id%>>0.0</td>
 		<%
 			}
 
 					newrow = false;
-					if (i == products.size() - 1 && product == "" && emptyRow == true) {
+					if (i == products.size() - 1 && product == ""
+							&& emptyRow == true) {
 						getnext = true;
 					}
 
@@ -108,7 +120,10 @@
 
 						i = -1;
 					}
+					id++;
 				}
+
+				AnalyticsHelper.maxIndex = id;
 		%>
 	</thead>
 </table>
