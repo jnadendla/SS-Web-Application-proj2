@@ -19,11 +19,13 @@ public class AnalyticsHelper {
 	private static int colOffset = 0;
 	private static long startTime = 0;
 	private static long timeElapsed = 0;
-	private static Map<String,String> stateTotals = new HashMap<String,String>();
+	private static Map<String, String> stateTotals = new HashMap<String,String>();
+	private static List<Sales> currSales = new ArrayList<Sales>();
 	
 	public static int maxIndex;
 	public static Map<Integer, String> rowMap = new HashMap<Integer, String>();
 	public static Map<Integer, String> colMap = new HashMap<Integer, String>();
+	public static Map<Integer, Double> dataMap = new HashMap<Integer, Double>();
 
 	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
 			boolean nextCols) {
@@ -90,6 +92,7 @@ public class AnalyticsHelper {
 		// we call a helper method to build the rest of the sales list.
 		sales = listByTopK(categoryFrom, categoryFilter, categoryTotalsFilter);// ////TOPK		// HERE
 		dropIndeciesOnTables();
+		currSales = sales;
 		return sales;
 	}
 
@@ -463,6 +466,39 @@ public class AnalyticsHelper {
 		conn.close();
 
 		return total;
+	}
+	
+	public static boolean salesContains(String purchaser, String product, double price) {
+	   for(int i=0; i<currSales.size(); i++) {
+	      Sales s = currSales.get(i);
+	      String state = s.getPurchaser();
+	      String prod = s.getProduct();
+	      double prc = s.getPrice();
+	      if(state.equals(purchaser) && prod.equals(product) && prc == price)
+	         return true;
+	   }
+	   
+	   return false;
+	}
+	
+	public static double updatePrice(int index) {
+	   String purchaser = rowMap.get(index);
+	   String product = colMap.get(index);
+	   
+       for(int i=0; i<currSales.size(); i++) {
+          Sales s = currSales.get(i);
+          String state = s.getPurchaser();
+          String prod = s.getProduct();
+          double price = s.getPrice();
+          if(state.equals(purchaser) && prod.equals(product)) {
+             dataMap.remove(index);
+             dataMap.put(index, price);
+             return price;
+          }
+       }
+       dataMap.remove(index);
+       dataMap.put(index, 0.0);
+       return 0.0;
 	}
 	
 }
