@@ -37,7 +37,10 @@ public class AnalyticsHelper {
 		// we use the previous filter data.
 		session = request.getSession();
 		String c = request.getParameter("categoryFilter");
-		session.setAttribute("categoryFilter", c);
+		if(c!= null && !c.isEmpty()) {
+			session.setAttribute("categoryFilter", c);
+		}
+		
 		
 		// When next button is clicked, increment the offsets
 		if (nextCols)
@@ -199,7 +202,6 @@ public class AnalyticsHelper {
    
 	            String query = "";
 	            String category = (String) session.getAttribute("categoryFilter");
-	            System.out.println(category);
 	            if(category != null && !category.equals("all")) {
       	            query = "SELECT s.name AS state, p.name AS product, o.price AS price "
       	                  + "FROM users AS u, states AS s, ordered AS o, totals AS t, categories AS c"
@@ -217,7 +219,6 @@ public class AnalyticsHelper {
 	            
 	            
 	            stmt = conn.prepareStatement(query);
-	            System.out.println(query);
 	            startTime = System.nanoTime();
 	            rs = stmt.executeQuery();
 	            timeElapsed = System.nanoTime() - startTime;

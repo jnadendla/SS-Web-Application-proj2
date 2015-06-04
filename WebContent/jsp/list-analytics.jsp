@@ -44,7 +44,7 @@
 					<input type="submit" value="Next 50" name="cols"
 						<%if (numCols < 50) {%> disabled <%}%>>
 				</form>
-				<button onclick="">Refresh</button>
+				<button onclick="refresh()">Refresh</button>
 			</td>
 		</tr>
 		<tr></tr>
@@ -95,13 +95,13 @@
 						AnalyticsHelper.colMap.put(id, product);
 						AnalyticsHelper.rowMap.put(id, purchaser);
 		%>
-		<td id=<%=id%>><%=total%></td>
+		<td id=<%=(currState.replaceAll("\\s+","")+i)%>><%=total%></td>
 		<%
 			} else {
 						AnalyticsHelper.colMap.put(id, product);
 						AnalyticsHelper.rowMap.put(id, purchaser);
 		%>
-		<td id=<%=id%>>0.0</td>
+		<td id=<%=(currState.replaceAll("\\s+","")+i)%>>0.0</td>
 		<%
 			}
 
