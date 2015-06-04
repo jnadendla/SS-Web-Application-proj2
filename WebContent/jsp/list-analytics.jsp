@@ -33,7 +33,7 @@
 					for (int k = 0; k < products.size(); ++k) {
 						String product = products.get(k);
 			%>
-			<th width="50%"><B><%=product + " ("
+			<th width="50%" ><B id=<%=(product.replaceAll("\\s+","")) %>><%=product + " ("
 							+ AnalyticsHelper.getProductTotal(request, product)
 							+ ")"%></B></th>
 			<%
@@ -84,7 +84,7 @@
 					if (newrow) {
 		%>
 		<tr></tr>
-		<td><B><%=purchaser
+		<td><B id=<%=(purchaser.replaceAll("\\s+",""))%>><%=purchaser
 								+ " ("
 								+ AnalyticsHelper.getPurchaserTotal(request,
 										purchaser) + ")"%></B></td>

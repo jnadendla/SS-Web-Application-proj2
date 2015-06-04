@@ -1,15 +1,35 @@
-<%@page import="java.util.*, org.json.simple.JSONObject, org.json.simple.JSONArray, helpers.*"%>
+<%@page
+	import="java.util.*, org.json.simple.JSONObject, org.json.simple.JSONArray, helpers.*"%>
 
 <%------------- Retrieve new data -------------------%>
 <%
 	JSONArray data = new JSONArray();
-	JSONObject tempJSON = new JSONObject(); // store values for individual states
-	JSONArray tempArray = new JSONArray();
+	JSONObject tempDataJSON = new JSONObject(); // store values for individual states
+	JSONArray tempDataArray = new JSONArray();
+
+	JSONArray productTotals = new JSONArray();
+	JSONObject tempProductJSON = new JSONObject();
+
+	JSONArray purchaserTotals = new JSONArray();
+	JSONObject tempPurchaserJSON = new JSONObject();
 
 	List<Sales> sales = AnalyticsHelper
 			.listSales(request, false, false);
 	List<String> products = AnalyticsHelper
 			.listProductsAlphabetically();
+
+	for (int k = 0; k < products.size(); ++k) {
+		String product = products.get(k);
+
+		tempProductJSON = new JSONObject();
+		tempProductJSON.put("product", product); // add purchaser
+		double productTotal = AnalyticsHelper.getProductTotal(request,
+				product);
+		tempProductJSON.put("total", Double.toString(productTotal));
+		
+		productTotals.add(tempProductJSON);
+
+	}
 
 	if (!sales.isEmpty() && !products.isEmpty()) {
 		//System.out.println("found sales and products");
@@ -35,7 +55,7 @@
 			double total = s.getPrice();
 			String product = s.getProduct();
 			if (!currState.equals(purchaser) && i == 0) {
-				
+
 				currState = purchaser;
 				newrow = true;
 				--i;
@@ -46,21 +66,31 @@
 				}
 			}
 			if (newrow) {
-				tempJSON = new JSONObject();
-				tempJSON.put("state", purchaser); // add state name
+				tempDataJSON = new JSONObject();
+				tempDataJSON.put("state", purchaser); // add state name
+
+				tempDataArray = new JSONArray();
+
+				tempPurchaserJSON = new JSONObject();
+				tempPurchaserJSON.put("purchaser", purchaser); // add purchaser
+
+				double purchaserTotal = AnalyticsHelper
+						.getPurchaserTotal(request, purchaser);
+				tempPurchaserJSON.put("total", Double.toString(purchaserTotal));
 				
-				tempArray = new JSONArray();
+				purchaserTotals.add(tempPurchaserJSON);
+
 			} else if (products.get(i).equals(product)
 					&& currState.equals(purchaser)) {
 				getnext = true;
-	
+
 				//System.out.println("adding to json array");
-				tempArray.add(Double.toString(total)); 
+				tempDataArray.add(Double.toString(total));
 				id++;
 
 			} else {
 				//System.out.println("adding to json array");
-				tempArray.add("0.0"); 
+				tempDataArray.add("0.0");
 				id++;
 
 			}
@@ -79,17 +109,19 @@
 				//System.out.println(getnext);
 
 				i = -1;
-				tempJSON.put("values", tempArray);
-				data.add(tempJSON); // add data for current state
+				tempDataJSON.put("values", tempDataArray);
+				data.add(tempDataJSON); // add data for current state
 			}
 		}
-		tempJSON.put("values", tempArray);
-		data.add(tempJSON); // add data for last state in list
+		tempDataJSON.put("values", tempDataArray);
+		data.add(tempDataJSON); // add data for last state in list
 	}
 
 	JSONObject result = new JSONObject();
-	
+
 	result.put("data", data);
+	result.put("productTotals", productTotals);
+	result.put("purchaserTotals", purchaserTotals);
 	out.print(result);
 	out.flush();
 %>
