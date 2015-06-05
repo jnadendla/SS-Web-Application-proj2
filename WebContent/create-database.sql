@@ -137,7 +137,7 @@ CREATE TABLE ordered (
 --    ON products  
 --    FOR EACH ROW
 --EXECUTE PROCEDURE orderfunc();
-
+/*
 CREATE FUNCTION salesfunc() RETURNS TRIGGER AS $orderS_table$
     BEGIN
 	INSERT INTO ordered(uid, pid, price) VALUES
@@ -150,7 +150,7 @@ CREATE TRIGGER trg_sales
     BEFORE INSERT OR UPDATE
     ON sales
     FOR EACH ROW
-EXECUTE PROCEDURE salesfunc();
+EXECUTE PROCEDURE salesfunc();*/
 
 CREATE TABLE totals (
     id          SERIAL PRIMARY KEY,

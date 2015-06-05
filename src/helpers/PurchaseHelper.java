@@ -1,6 +1,7 @@
 package helpers;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,6 +12,7 @@ public class PurchaseHelper {
 
     public static String purchaseCart(ShoppingCart cart, Integer uid) {
         Connection conn = null;
+        PreparedStatement pstmt = null;
         Statement stmt = null;
         try {
             try {
@@ -33,6 +35,14 @@ public class PurchaseHelper {
                 String SQL_3 = "INSERT INTO sales (uid, pid, cart_id, quantity, price) VALUES(" + uid + ",'"
                         + p.getId() + "','" + cart_id + "','" + quantity + "', " + p.getPrice() + ");";
                 stmt.execute(SQL_3);
+                
+                //Insert into Ordered Table
+                String query = "INSERT INTO ordered (uid, pid, price) VALUES(" + uid + ", " + p.getId() + ", (" + quantity + " * " + p.getPrice() + "))";
+                System.out.println(query);
+                pstmt = conn.prepareStatement(query);
+                pstmt.execute();
+                //.....
+                
                 conn.commit();
                 conn.setAutoCommit(true);
             }

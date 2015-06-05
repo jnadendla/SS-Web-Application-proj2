@@ -25,7 +25,6 @@ public class AnalyticsHelper {
 	public static int maxIndex;
 	public static Map<Integer, String> rowMap = new HashMap<Integer, String>();
 	public static Map<Integer, String> colMap = new HashMap<Integer, String>();
-	public static Map<Integer, Double> dataMap = new HashMap<Integer, Double>();
 
 	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
 			boolean nextCols) {
@@ -466,39 +465,5 @@ public class AnalyticsHelper {
 		conn.close();
 
 		return total;
-	}
-	
-	public static boolean salesContains(String purchaser, String product, double price) {
-	   for(int i=0; i<currSales.size(); i++) {
-	      Sales s = currSales.get(i);
-	      String state = s.getPurchaser();
-	      String prod = s.getProduct();
-	      double prc = s.getPrice();
-	      if(state.equals(purchaser) && prod.equals(product) && prc == price)
-	         return true;
-	   }
-	   
-	   return false;
-	}
-	
-	public static double updatePrice(int index) {
-	   String purchaser = rowMap.get(index);
-	   String product = colMap.get(index);
-	   
-       for(int i=0; i<currSales.size(); i++) {
-          Sales s = currSales.get(i);
-          String state = s.getPurchaser();
-          String prod = s.getProduct();
-          double price = s.getPrice();
-          if(state.equals(purchaser) && prod.equals(product)) {
-             dataMap.remove(index);
-             dataMap.put(index, price);
-             return price;
-          }
-       }
-       dataMap.remove(index);
-       dataMap.put(index, 0.0);
-       return 0.0;
-	}
-	
+	}	
 }
