@@ -1,3 +1,5 @@
+<!--  ////////////// PROJECT 3 CODE ////////////////////////-->
+
 <%@page
 	import="java.util.*, org.json.simple.JSONObject, org.json.simple.JSONArray, helpers.*"%>
 
@@ -26,7 +28,7 @@
 		double productTotal = AnalyticsHelper.getProductTotal(request,
 				product);
 		tempProductJSON.put("total", Double.toString(productTotal));
-		
+
 		productTotals.add(tempProductJSON);
 
 	}
@@ -76,8 +78,9 @@
 
 				double purchaserTotal = AnalyticsHelper
 						.getPurchaserTotal(request, purchaser);
-				tempPurchaserJSON.put("total", Double.toString(purchaserTotal));
-				
+				tempPurchaserJSON.put("total",
+						Double.toString(purchaserTotal));
+
 				purchaserTotals.add(tempPurchaserJSON);
 
 			} else if (products.get(i).equals(product)

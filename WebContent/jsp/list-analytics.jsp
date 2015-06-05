@@ -1,4 +1,4 @@
-<!-- Put your Project 2 code here -->
+<!--////////////// PROJECT 3 CODE ////////////////////////-->
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.util.List" import="java.util.Iterator"
 	import="helpers.*"%>
@@ -33,7 +33,7 @@
 					for (int k = 0; k < products.size(); ++k) {
 						String product = products.get(k);
 			%>
-			<th width="50%" ><B id=<%=(product.replaceAll("\\s+","")) %>><%=product + " ("
+			<th width="50%"><B id=<%=(product.replaceAll("\\s+","")) %>><%=product + " ("
 							+ AnalyticsHelper.getProductTotal(request, product)
 							+ ")"%></B></th>
 			<%

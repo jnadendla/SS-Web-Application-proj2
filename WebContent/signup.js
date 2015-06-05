@@ -1,3 +1,5 @@
+////////////// PROJECT 3 CODE ////////////////////////
+
 $(function(){
 	$(document).on("submit", "#signup-form", function(e){
 		e.preventDefault();

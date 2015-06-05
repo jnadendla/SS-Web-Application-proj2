@@ -19,15 +19,15 @@ public class AnalyticsHelper {
 	private static int colOffset = 0;
 	private static long startTime = 0;
 	private static long timeElapsed = 0;
-	private static Map<String, String> stateTotals = new HashMap<String,String>();
+	private static Map<String, String> stateTotals = new HashMap<String, String>();
 	private static List<Sales> currSales = new ArrayList<Sales>();
-	
+
 	public static int maxIndex;
 	public static Map<Integer, String> rowMap = new HashMap<Integer, String>();
 	public static Map<Integer, String> colMap = new HashMap<Integer, String>();
 
-	public static List<Sales> listSales(HttpServletRequest request, boolean runQuery,
-			boolean nextCols) {
+	public static List<Sales> listSales(HttpServletRequest request,
+			boolean runQuery, boolean nextCols) {
 		List<Sales> sales = new ArrayList<Sales>();
 		String categoryFrom = "";
 		String categoryFilter = "", additionalFilter = "", category = "", categoryTotalsFilter = "";
@@ -38,15 +38,14 @@ public class AnalyticsHelper {
 		// we use the previous filter data.
 		session = request.getSession();
 		String c = request.getParameter("categoryFilter");
-		if(c!= null && !c.isEmpty()) {
+		if (c != null && !c.isEmpty()) {
 			session.setAttribute("categoryFilter", c);
 		}
-		
-		
+
 		// When next button is clicked, increment the offsets
 		if (nextCols)
 			colOffset += 50;
-		else if(runQuery) {
+		else if (runQuery) {
 			// New data means we start at offset 0
 			colOffset = 0;
 		}
@@ -65,7 +64,8 @@ public class AnalyticsHelper {
 				categoryFrom = ", categories AS c ";
 				categoryFilter = "AND p.cid = c.id AND c.id = " + category
 						+ " AND c.id = t.cid ";
-				categoryTotalsFilter = "AND p.cid = c.id AND c.id = " + category + "";
+				categoryTotalsFilter = "AND p.cid = c.id AND c.id = "
+						+ category + "";
 			}
 		} catch (Exception e) {
 		}
@@ -79,7 +79,6 @@ public class AnalyticsHelper {
 		// (states).
 		// be placed in the WHERE clause of the query.
 		additionalFilter = "t.id = u.state AND u.id = s.uid AND u.role = 'customer' AND p.id = s.pid ";
-		
 
 		// This simply combines the filter string with a category to filter
 		// by if one exists.
@@ -89,9 +88,13 @@ public class AnalyticsHelper {
 		// of the query. Based on if the sort is alphabetical, we then sort by
 		// the name and product of the users/states. If the sort is topk, then
 		// we call a helper method to build the rest of the sales list.
-		sales = listByTopK(categoryFrom, categoryFilter, categoryTotalsFilter);// ////TOPK		// HERE
+		sales = listByTopK(categoryFrom, categoryFilter, categoryTotalsFilter);// ////TOPK
+																				// //
+																				// HERE
 		dropIndeciesOnTables();
 		currSales = sales;
+		// ////////////PROJECT 3 CODE (removed unnecessary project 2
+		// code)////////////////////////
 		return sales;
 	}
 
@@ -128,14 +131,13 @@ public class AnalyticsHelper {
 			// stmt = conn.createStatement();
 			String query = "SELECT p.name AS name FROM products AS p"
 					+ categoryFilter + " ORDER BY p.name " + limitCols;
-			
+
 			stmt = conn.prepareStatement(query);
-			
+
 			startTime = System.nanoTime();
 			rs = stmt.executeQuery();
 			timeElapsed = System.nanoTime() - startTime;
 			System.out.println("Product Query: " + query + " : " + timeElapsed);
-			
 
 			// populate list
 			while (rs.next()) {
@@ -167,6 +169,7 @@ public class AnalyticsHelper {
 	 */
 	private static List<Sales> listByTopK(String categoryFrom,
 			String categoryFilter, String categoryTotalsFilter) {
+		// ////////////PROJECT 3 CODE ////////////////////////
 		List<Sales> sales = new ArrayList<Sales>();
 		List<String> topk = new ArrayList<String>();
 		ResultSet rs, order;
@@ -174,146 +177,154 @@ public class AnalyticsHelper {
 		PreparedStatement stmt = null;
 		String limitCols = " LIMIT 50 OFFSET " + colOffset;
 		String products;
-		
+
 		List<String> purchasers = new ArrayList<String>();
-		String[] stateList = {"Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-		      "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-		      "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
-		      "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
-		      "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
-		      "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
-		      "West Virginia", "Wisconsin", "Wyoming"};
-		for(int i=0; i < stateList.length; ++i) {
-		   String state = stateList[i];
-		   purchasers.add(state);
+		String[] stateList = { "Alabama", "Alaska", "Arizona", "Arkansas",
+				"California", "Colorado", "Connecticut", "Delaware", "Florida",
+				"Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+				"Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+				"Massachusetts", "Michigan", "Minnesota", "Mississippi",
+				"Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+				"New Jersey", "New Mexico", "New York", "North Carolina",
+				"North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+				"Rhode Island", "South Carolina", "South Dakota", "Tennessee",
+				"Texas", "Utah", "Vermont", "Virginia", "Washington",
+				"West Virginia", "Wisconsin", "Wyoming" };
+		for (int i = 0; i < stateList.length; ++i) {
+			String state = stateList[i];
+			purchasers.add(state);
 		}
-	    
-	      try {
-	            try {
-	                conn = HelperUtils.connect();
-	            } catch (Exception e) {
-	                System.err
-	                        .println("Internal Server Error. This shouldn't happen.");
-	                return sales;
-	            }
-	            // stmt = conn.createStatement();
 
-	            // Loop through all the names ordered by topk and query sales
-	            // information in topk order
-   
-   
-	            String query = "";
-	            String category = (String) session.getAttribute("categoryFilter");
-	            if(category != null && !category.equals("all")) {
-      	            query = "SELECT s.name AS state, p.name AS product, o.price AS price "
-      	                  + "FROM users AS u, states AS s, ordered AS o, totals AS t, categories AS c"
-      	                  + ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p "
-      	                  + "WHERE u.id = o.uid AND s.id = u.state " + categoryFilter 
-      	                  + "AND p.id = o.pid AND s.id = t.state "
-      	                  + "ORDER BY t.total DESC, p.name";
-	            } else {
-	                query = "SELECT s.name AS state, p.name AS product, o.price AS price "
-	                      + "FROM users AS u, states AS s, ordered AS o, allTotals AS t"
-	                      + ", (SELECT * FROM products AS n ORDER BY n.name" + limitCols + ") p "
-	                      + "WHERE u.id = o.uid AND s.id = u.state "
-	                      + "AND p.id = o.pid AND s.id = t.state ORDER BY t.total DESC, p.name";
-	            }
-	            
-	            
-	            stmt = conn.prepareStatement(query);
-	            startTime = System.nanoTime();
-	            rs = stmt.executeQuery();
-	            timeElapsed = System.nanoTime() - startTime;
-	            System.out.println(query + " : " + timeElapsed);
-	            
-	            boolean ignore = false;
-	            if (!rs.isBeforeFirst()) {
-                   ignore = true;
-                }
-	            
-	            // populate list
-	            boolean everyOther = false;
-	            Sales temp = null;
-	            while (ignore == false && rs.next()) {
-	               String purchaser = rs.getString("state");
-	               double price = rs.getDouble("price");
-	               String product = rs.getString("product");
-	               topk.add(purchaser);
-	               	               
-	               // The everyOther aspect is designed so have the sales from
-	               // the previous loop index
-	               // and we can check if the current sale is mad by the same
-	               // user and of the same
-	               // product. If so, we just mold these sales into 1 sale.
-	               // This is neccessary
-	               // because users can purchase items multiple times but at
-	               // different instances, so
-	               // the database will contain multiple sales of the same
-	               // product.
-	               if (everyOther) {
-	                  if (temp.getPurchaser().equals(purchaser)
-	                        && temp.getProduct().equals(product)) {
-	                     String tempPurchaser = temp.getPurchaser();
-	                     double tempPrice = temp.getPrice() + price;
-	                     String tempProduct = temp.getProduct();
-	                     temp = new Sales(tempPurchaser, tempPrice,
-	                           tempProduct);
-	                     if (rs.isLast())// make sure to add item it is the
-	                        // last one
-	                        sales.add(temp);
-	                     } else {
-	                        sales.add(temp);
-	                        temp = new Sales(purchaser, price, product);
-	                        if (rs.isLast())// make sure to add item it is the// last one
-	                           sales.add(temp);
-	                    }
-	               } else {
-	                  everyOther = true;
-	                  temp = new Sales(purchaser, price, product);
-	                  if (rs.isLast())// make sure to add last item
-	                     sales.add(temp);
-	                  }
-	            }
-	            
-	            String pQuery = "SELECT s.name AS name, SUM(o.price) AS total "
-	                          + "FROM states AS s, ordered AS o, users AS u, products AS p " + categoryFrom
-	                          + "WHERE o.uid = u.id AND u.state = s.id AND o.pid = p.id " + categoryTotalsFilter
-	                          + "GROUP BY s.name ORDER BY s.name ";
-	            
-	            stmt = conn.prepareStatement(pQuery);
-	            
-	            startTime = System.nanoTime();
-	            order = stmt.executeQuery();
-	            timeElapsed = System.nanoTime() - startTime;
-	            System.out.println(pQuery + " : " + timeElapsed);
-	            stateTotals.clear();
-	            
-	            while(order.next()) {
-	                String purchaser = order.getString("name");
-	                double total = order.getDouble("total");
-	                stateTotals.put(purchaser, String.valueOf(total));
-	            }
+		try {
+			try {
+				conn = HelperUtils.connect();
+			} catch (Exception e) {
+				System.err
+						.println("Internal Server Error. This shouldn't happen.");
+				return sales;
+			}
+			// stmt = conn.createStatement();
 
-	            if(sales.size() < 50) {
-	                for(int i = 0; i < purchasers.size(); i++) {
-	                    if(!topk.contains(purchasers.get(i))) {
-	                        sales.add(new Sales(purchasers.get(i), 0.0, ""));
-	                    }
-	                }
-	            }
-	            
-	        } catch (Exception e) {
-	            System.err.println("Some error happened!<br/>"
-	                    + e.getLocalizedMessage());
-	            return sales;
-	        } finally {
-	            try {
-	                stmt.close();
-	                conn.close();
-	            } catch (SQLException e) {
-	                e.printStackTrace();
-	            }
-	        }
+			// Loop through all the names ordered by topk and query sales
+			// information in topk order
+
+			String query = "";
+			String category = (String) session.getAttribute("categoryFilter");
+			if (category != null && !category.equals("all")) {
+				query = "SELECT s.name AS state, p.name AS product, o.price AS price "
+						+ "FROM users AS u, states AS s, ordered AS o, totals AS t, categories AS c"
+						+ ", (SELECT * FROM products AS n ORDER BY n.name"
+						+ limitCols
+						+ ") p "
+						+ "WHERE u.id = o.uid AND s.id = u.state "
+						+ categoryFilter
+						+ "AND p.id = o.pid AND s.id = t.state "
+						+ "ORDER BY t.total DESC, p.name";
+			} else {
+				query = "SELECT s.name AS state, p.name AS product, o.price AS price "
+						+ "FROM users AS u, states AS s, ordered AS o, allTotals AS t"
+						+ ", (SELECT * FROM products AS n ORDER BY n.name"
+						+ limitCols
+						+ ") p "
+						+ "WHERE u.id = o.uid AND s.id = u.state "
+						+ "AND p.id = o.pid AND s.id = t.state ORDER BY t.total DESC, p.name";
+			}
+
+			stmt = conn.prepareStatement(query);
+			startTime = System.nanoTime();
+			rs = stmt.executeQuery();
+			timeElapsed = System.nanoTime() - startTime;
+			System.out.println(query + " : " + timeElapsed);
+
+			boolean ignore = false;
+			if (!rs.isBeforeFirst()) {
+				ignore = true;
+			}
+
+			// populate list
+			boolean everyOther = false;
+			Sales temp = null;
+			while (ignore == false && rs.next()) {
+				String purchaser = rs.getString("state");
+				double price = rs.getDouble("price");
+				String product = rs.getString("product");
+				topk.add(purchaser);
+
+				// The everyOther aspect is designed so have the sales from
+				// the previous loop index
+				// and we can check if the current sale is mad by the same
+				// user and of the same
+				// product. If so, we just mold these sales into 1 sale.
+				// This is neccessary
+				// because users can purchase items multiple times but at
+				// different instances, so
+				// the database will contain multiple sales of the same
+				// product.
+				if (everyOther) {
+					if (temp.getPurchaser().equals(purchaser)
+							&& temp.getProduct().equals(product)) {
+						String tempPurchaser = temp.getPurchaser();
+						double tempPrice = temp.getPrice() + price;
+						String tempProduct = temp.getProduct();
+						temp = new Sales(tempPurchaser, tempPrice, tempProduct);
+						if (rs.isLast())// make sure to add item it is the
+							// last one
+							sales.add(temp);
+					} else {
+						sales.add(temp);
+						temp = new Sales(purchaser, price, product);
+						if (rs.isLast())// make sure to add item it is the//
+										// last one
+							sales.add(temp);
+					}
+				} else {
+					everyOther = true;
+					temp = new Sales(purchaser, price, product);
+					if (rs.isLast())// make sure to add last item
+						sales.add(temp);
+				}
+			}
+
+			String pQuery = "SELECT s.name AS name, SUM(o.price) AS total "
+					+ "FROM states AS s, ordered AS o, users AS u, products AS p "
+					+ categoryFrom
+					+ "WHERE o.uid = u.id AND u.state = s.id AND o.pid = p.id "
+					+ categoryTotalsFilter + "GROUP BY s.name ORDER BY s.name ";
+
+			stmt = conn.prepareStatement(pQuery);
+
+			startTime = System.nanoTime();
+			order = stmt.executeQuery();
+			timeElapsed = System.nanoTime() - startTime;
+			System.out.println(pQuery + " : " + timeElapsed);
+			stateTotals.clear();
+
+			while (order.next()) {
+				String purchaser = order.getString("name");
+				double total = order.getDouble("total");
+				stateTotals.put(purchaser, String.valueOf(total));
+			}
+
+			if (sales.size() < 50) {
+				for (int i = 0; i < purchasers.size(); i++) {
+					if (!topk.contains(purchasers.get(i))) {
+						sales.add(new Sales(purchasers.get(i), 0.0, ""));
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			System.err.println("Some error happened!<br/>"
+					+ e.getLocalizedMessage());
+			return sales;
+		} finally {
+			try {
+				stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 
 		return sales;
 	}
@@ -353,7 +364,7 @@ public class AnalyticsHelper {
 			index = "CREATE INDEX idx_pid_onSales ON sales (pid)";
 			stmt = conn.prepareStatement(index);
 			stmt.execute();
-			
+
 		} catch (Exception e) {
 			System.err.println("Some error happened adding index!<br/>"
 					+ e.getLocalizedMessage());
@@ -429,9 +440,11 @@ public class AnalyticsHelper {
 		}
 
 		double total = 0;
-		
+
+		// ////////////PROJECT 3 CODE ////////////////////////
 		String value = stateTotals.get(purchaser);
-		if(value == null) return 0.0;
+		if (value == null)
+			return 0.0;
 		total += Double.parseDouble(value);
 
 		return total;
@@ -451,7 +464,7 @@ public class AnalyticsHelper {
 						+ "FROM sales AS s, products AS p WHERE p.name = ? AND s.pid = p.id");
 
 		stmt.setString(1, product);
-		
+
 		startTime = System.nanoTime();
 		rs = stmt.executeQuery();
 		timeElapsed = System.nanoTime() - startTime;
@@ -465,5 +478,5 @@ public class AnalyticsHelper {
 		conn.close();
 
 		return total;
-	}	
+	}
 }
