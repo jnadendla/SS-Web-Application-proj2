@@ -2,6 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <jsp:include page="/html/head.html" />
+<script src="signup.js"></script>
 </head>
 <body class="page-index" data-spy="scroll" data-offset="60" data-target="#toc-scroll-target">
 

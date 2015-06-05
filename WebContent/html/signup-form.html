@@ -1,7 +1,8 @@
 
 <div class="container">
-    <form action="signup" method="post">
+    <form action="signup" method="post" id="signup-form">
         <table align="center">
+            <tr><td id="nameError"></td></tr>
             <tr>
                 <td>Name:</td>
                 <td><input type="text" id="name" name="name"></td>
@@ -13,6 +14,7 @@
                         <option>customer</option>
                 </select></td>
             </tr>
+            <tr><td id="ageError"></td></tr>
             <tr>
                 <td>Age:</td>
                 <td><input type="text" id="age" name="age"></td>
